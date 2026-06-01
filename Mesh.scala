@@ -3,9 +3,8 @@ import java.lang.foreign.{Arena, ValueLayout}
 class Mesh(
   vertices: Array[Float],
   indices: Array[Int],
-  arena: Arena,
   gl: GL // Only pass the unified wrapper object!
-) {
+)(using arena: Arena) {
 
   // OpenGL Constants needed internally
   private val GL_ARRAY_BUFFER         = 0x00008892

@@ -1,9 +1,9 @@
 import java.lang.foreign.*
 
-class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String, arena: Arena) {
+class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena: Arena) {
   private val windowTitle = arena.allocateFrom(title) // helper to copy string + null terminator
   val handle: MemorySegment = glfw.createPrimaryWindow(width,height,windowTitle)
-  val currentAspectRatio = width/height
+  val currentAspectRatio = width.floatValue/height.floatValue()
   if (handle == MemorySegment.NULL) {
     glfw.terminate()
     throw new RuntimeException("Failed to create window")

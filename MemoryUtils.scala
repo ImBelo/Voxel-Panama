@@ -9,18 +9,19 @@ enum ArenaType:
 object MemoryUtils {
   
   // Zero-cost arena resource management
-  inline def withArena[T](inline arenaType: ArenaType)(inline f: Arena => T): T = {
+  inline def withArena[T](inline arenaType: ArenaType)(inline f: Arena ?=> T): T = {
   inline arenaType match {
     case ArenaType.Confined =>
       val arena = Arena.ofConfined()
-      try f(arena) finally arena.close()
+      try f(using arena) finally arena.close()
       
     case ArenaType.Shared =>
       val arena = Arena.ofShared()
-      try f(arena) finally arena.close()
+      try f(using arena) finally arena.close()
       
     case ArenaType.Auto =>
-      f(Arena.ofAuto())
+      val arena = Arena.ofAuto()
+      f(using arena)
   }
 }
   

@@ -6,6 +6,10 @@ import javax.xml.validation.SchemaFactoryLoader
 
 class GL(lookup: SymbolLookup, linker: Linker) {
 
+  val GL_VERTEX_SHADER   = 0x8B31
+  val GL_FRAGMENT_SHADER = 0x8B30
+
+
   private val glCreateShader_H = linker.downcallHandle(
     lookup.find("glCreateShader").get(),
     FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
@@ -77,6 +81,29 @@ class GL(lookup: SymbolLookup, linker: Linker) {
     lookup.find("glGenVertexArrays").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
   )
+  private val glViewportHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glViewport").get(),
+    FunctionDescriptor.ofVoid(
+      ValueLayout.JAVA_INT, // x
+      ValueLayout.JAVA_INT, // y
+      ValueLayout.JAVA_INT, // width
+      ValueLayout.JAVA_INT  // height
+    )
+  )
+  private val glUniform1fHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glUniform1f").get(),
+    FunctionDescriptor.ofVoid(
+      ValueLayout.JAVA_INT,  // location: The uniform variable's memory slot index
+      ValueLayout.JAVA_FLOAT // v0: The float value to pass to the shader
+    )
+  )
+  def uniform1f(location: Int, value: Float): Unit = {
+    glUniform1fHandle.invokeExact(location, value)
+  }
+
+  def viewport(x: Int, y: Int, width: Int, height: Int): Unit = {
+    glViewportHandle.invokeExact(x, y, width, height)
+  }
   def genVertexArrays(n: Int, arraysOutPointer: MemorySegment): Unit = {
     glGenVertexArraysHandle.invokeExact(n, arraysOutPointer)
   }

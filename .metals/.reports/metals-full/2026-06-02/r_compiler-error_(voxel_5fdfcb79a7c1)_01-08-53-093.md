@@ -1,0 +1,302 @@
+error id: 54E02E28BFDC429DC2A86C7B1C82764F
+file://<WORKSPACE>/window.scala
+### java.lang.NoSuchMethodError: 'boolean scala.meta.pc.VirtualFileParams.shouldReturnDiagnostics()'
+
+occurred in the presentation compiler.
+
+
+
+action parameters:
+uri: file://<WORKSPACE>/window.scala
+text:
+```scala
+// window.scala
+import java.lang.foreign.*
+import java.lang.invoke.MethodHandle
+import java.nio.charset.StandardCharsets
+import scala.util.Using
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import MemoryUtils.withArena
+import ArenaType.*
+
+object Window {
+
+  // OpenGL Constants needed for drawing
+  private val GL_COLOR_BUFFER_BIT = 0x00004000
+  private val GL_DEPTH_BUFFER_BIT = 0x00000100
+  private val GL_DEPTH_TEST       = 0x00000B71
+  private val GL_TRIANGLES        = 0x00000004
+  private val GL_STATIC_DRAW      = 0x000088E4
+  private val GL_ARRAY_BUFFER     = 0x00008892
+  private val GL_ELEMENT_ARRAY_BUFFER = 0x00008893
+  private val GL_FLOAT            = 0x00001406
+  private val GL_UNSIGNED_INT     = 0x00001405
+  private val GLFW_RAW_MOUSE_MOTION = 0x00033001  // GLFW 3.3+ constant
+  private val GLFW_TRUE = 1
+
+  var firstMouse: Boolean = true
+  var lastX: Double = 0.0
+  var lastY: Double = 0.0
+  private val vertexSource =
+    """#version 330 core
+  layout (location = 0) in vec3 aPos;
+  layout (location = 1) in vec3 aNormal; // New: Normal direction for each vertex
+
+  out vec3 FragPos;  // Pass world position to Fragment Shader
+  out vec3 Normal;   // Pass transformed normal to Fragment Shader
+
+  uniform mat4 u_Model;
+  uniform mat4 u_View;
+  uniform mat4 u_Projection;
+
+  void main() {
+    // Calculate the vertex position in world space
+    FragPos = vec3(u_Model * vec4(aPos, 1.0));
+
+    // Transform the normal vector to match world space rotations
+    // (Inverse-transpose handles non-uniform scaling safely)
+    Normal = mat3(transpose(inverse(u_Model))) * aNormal;  
+
+    gl_Position = u_Projection * u_View * vec4(FragPos, 1.0);
+  }
+  """.stripMargin
+
+  private val fragmentSource =
+    """#version 330 core
+  out vec4 FragColor;
+
+  in vec3 FragPos;
+  in vec3 Normal;
+
+  uniform vec3 u_ObjectColor;
+  uniform vec3 u_LightPos;   // Position of your light source (e.g., vec3(2.0, 4.0, 3.0))
+  uniform vec3 u_LightColor; // Color of the light (e.g., vec3(1.0, 1.0, 1.0) for white)
+
+  void main() {
+    // 1. Ambient Light (static background glow)
+    float ambientStrength = 0.25;
+    vec3 ambient = ambientStrength * u_LightColor;
+
+    // 2. Diffuse Light (directional shading)
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(u_LightPos - FragPos);
+
+    // Dot product determines the angle. max() prevents negative values (light from behind)
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * u_LightColor;
+
+    // 3. Combine them to color the pixel
+    vec3 result = (ambient + diffuse) * u_ObjectColor;
+    FragColor = vec4(result, 1.0);
+  }    """.stripMargin
+
+
+
+  def start(width: Int, height: Int, title: String): Unit = {
+    val linker = Linker.nativeLinker()
+
+    // 1. Load GLFW (Windowing)
+    System.load("/usr/lib/x86_64-linux-gnu/libglfw.so.3") 
+
+    // 2. Load libGL (OpenGL Graphics Functions)
+    // On standard Linux systems, this file or its symbolic links live here:
+    try {
+      System.load("/usr/lib/x86_64-linux-gnu/libGL.so.1")
+    } catch {
+      case _: UnsatisfiedLinkError => 
+        // Fallback for some Linux distributions where the link points straight to libGL.so
+        System.load("/usr/lib/libGL.so")
+    }
+
+
+    val lookup = SymbolLookup.loaderLookup()
+
+    val glfw = new Glfw(lookup, linker)
+    val gl   = new GL(lookup, linker)
+
+    // 1. Clean, highly readable engine setup sequence
+    if (glfw.init() == 0) throw new RuntimeException("GLFW Init Failed")   
+
+    withArena(Confined) { arena ?=> 
+      val camera = new Camera()
+      val window = new GlfwWindow(width,height,glfw, "Meow")
+
+      val inputHandler = new InputHandler(glfw,window,camera,0.05)
+
+      // Any drawing commands should go in window.handle pointer
+      glfw.makeContextCurrent(window.handle)
+      glfw.setInputMode(window.handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
+
+      // THIS TURNS OFF VSYNC NEED TO 
+      glfw.swapInterval(0) 
+      window.enableRawMouseMotion()
+      // Enables 3D Occlusion
+      gl.enable(GL_DEPTH_TEST) 
+      // COlors the sky blue
+      gl.clearColor(0.2f, 0.4f, 0.6f, 1.0f) 
+
+      //val shader = new Shader(gl)
+      // NEW:
+      import ShaderProgram.given
+      val shader = ShaderBuilder.build(gl, ShaderSources(vertexSource, fragmentSource))(using arena)
+
+      // --- UPGRADED CUBE DATA ARRAYS (24 Vertices) ---
+      // Structure: X, Y, Z,   NX, NY, NZ
+      val vertices = Array[Float](
+        // --- FRONT FACE (Normal: 0, 0, 1) ---
+      -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 0: Bottom-Left
+      0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 1: Bottom-Right
+      0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 2: Top-Right
+      -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 3: Top-Left
+
+      // --- BACK FACE (Normal: 0, 0, -1) ---
+      -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 4: Bottom-Left
+      0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 5: Bottom-Right
+      0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 6: Top-Right
+      -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 7: Top-Left
+
+      // --- TOP FACE (Normal: 0, 1, 0) ---
+      -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 8: Front-Left
+      0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 9: Front-Right
+      0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 10: Back-Right
+      -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 11: Back-Left
+
+      // --- BOTTOM FACE (Normal: 0, -1, 0) ---
+      -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 12: Front-Left
+      0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 13: Front-Right
+      0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 14: Back-Right
+      -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 15: Back-Left
+
+      // --- RIGHT FACE (Normal: 1, 0, 0) ---
+      0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 16: Bottom-Front
+      0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 17: Bottom-Back
+      0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 18: Top-Back
+      0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 19: Top-Front
+
+      // --- LEFT FACE (Normal: -1, 0, 0) ---
+      -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 20: Bottom-Front
+      -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 21: Bottom-Back
+      -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 22: Top-Back
+      -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f  // 23: Top-Front
+    )
+
+      // --- UPGRADED INDEX ARRAY (Mapping the 24 Vertices into Triangles) ---
+      val indices = Array[Int](
+        0, 1, 2,   2, 3, 0,   // Front
+        4, 5, 6,   6, 7, 4,   // Back
+        8, 9, 10,  10, 11, 8,  // Top
+        12, 13, 14, 14, 15, 12, // Bottom
+        16, 17, 18, 18, 19, 16, // Right
+        20, 21, 22, 22, 23, 20  // Left
+      )
+     
+
+      // Mesh now only needs our clean unified 'gl' command manager
+      val cubeMesh = new Mesh(vertices, indices, gl)
+
+
+      // For performance, pre-allocate your matrix math targets so you don't allocate objects inside the loop
+      val modelMatrix      = new Matrix4f()
+      val viewMatrix       = new Matrix4f()
+      val projectionMatrix = new Matrix4f()
+
+
+      // --- RENDER LOOP ---
+
+      var shouldClose = false
+
+      var lastTime = System.nanoTime()
+      while (!shouldClose) {
+        // 1. The top-level zone tracking the cumulative execution time of the entire frame
+        val currentTime = System.nanoTime()
+        val deltaTime = ((currentTime - lastTime) / 1_000_000_000.0).toFloat
+        lastTime = currentTime // Update for the next frame
+        EngineProfiler.zone("Total Frame") {
+
+          // --- STAGE 1: INPUT PROCESSING ---
+          EngineProfiler.zone("Input Processing") {
+            // Use our abstract glfw handler to process inputs
+            inputHandler.update(deltaTime)
+          }
+
+          // --- STAGE 2: CAMERA & MATRIX CALCULATIONS ---
+          EngineProfiler.zone("Math & Uniform Updates") {
+
+            // Clear screen via clean API call
+            EngineProfiler.zone("GPU clear") {
+              gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            }
+
+            // Bind shader program BEFORE setting uniforms!
+
+            shader.use()
+
+            // Update Camera Transformations
+            gl.viewport(0, 0, width, height)
+            camera.getViewMatrix(viewMatrix)
+            camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
+            modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
+
+            shader.set("u_ObjectColor", (0.2f, 0.8f, 0.2f))  // Green base color
+            shader.set("u_LightPos",    (5.0f, 10.0f, 5.0f))  // Sun position
+            shader.set("u_LightColor",  (1.0f, 1.0f, 0.95f))  // Warm sunlight
+            shader.set("u_Model",      modelMatrix)            // Model matrix
+            shader.set("u_View",       viewMatrix)             // View matrix
+            shader.set("u_Projection", projectionMatrix)       // Projection matrix
+
+          }
+
+          // --- STAGE 3: GPU RENDER DISPATCH ---
+          EngineProfiler.zone("GPU Draw Dispatch") {
+            gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            cubeMesh.draw()
+          }
+
+          // --- STAGE 4: FRAME PRESENTATION & OS POLLING ---
+          EngineProfiler.zone("Frame Present & Poll") {
+            glfw.swapBuffers(window.handle)
+            glfw.pollEvents()
+          }
+
+          // Check if window should exit
+          if (glfw.windowShouldClose(window.handle) != 0) {
+            shouldClose = true
+          }
+        }
+      }
+      glfw.terminate()
+    }
+
+  }
+}
+
+```
+
+
+presentation compiler configuration:
+Scala version: 3.8.2-bin-nonbootstrapped
+Classpath:
+<WORKSPACE>/.scala-build/voxel_dfcb79a7c1/classes/main [exists ], <HOME>/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.2/scala3-library_3-3.8.2.jar [exists ], <HOME>/.cache/coursier/v1/https/repo1.maven.org/maven2/org/joml/joml/1.10.8/joml-1.10.8.jar [exists ], <HOME>/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/3.8.2/scala-library-3.8.2.jar [exists ], <HOME>/.cache/coursier/v1/https/repo1.maven.org/maven2/com/sourcegraph/semanticdb-javac/0.10.0/semanticdb-javac-0.10.0.jar [exists ], <WORKSPACE>/.scala-build/voxel_dfcb79a7c1/classes/main/META-INF/best-effort [missing ]
+Options:
+-Xsemanticdb -sourceroot <WORKSPACE> -release 21 -Ywith-best-effort-tasty
+
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.pc.DiagnosticProvider.diagnostics(DiagnosticProvider.scala:19)
+	dotty.tools.pc.ScalaPresentationCompiler.didChange$$anonfun$1(ScalaPresentationCompiler.scala:509)
+	scala.meta.internal.pc.CompilerAccess.withSharedCompiler(CompilerAccess.scala:149)
+	scala.meta.internal.pc.CompilerAccess.withNonInterruptableCompiler$$anonfun$1(CompilerAccess.scala:133)
+	scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:210)
+	scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	java.base/java.lang.Thread.run(Thread.java:1516)
+```
+#### Short summary: 
+
+java.lang.NoSuchMethodError: 'boolean scala.meta.pc.VirtualFileParams.shouldReturnDiagnostics()'

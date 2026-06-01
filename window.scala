@@ -26,6 +26,59 @@ object Window {
   var firstMouse: Boolean = true
   var lastX: Double = 0.0
   var lastY: Double = 0.0
+  private val vertexSource =
+    """#version 330 core
+  layout (location = 0) in vec3 aPos;
+  layout (location = 1) in vec3 aNormal; // New: Normal direction for each vertex
+
+  out vec3 FragPos;  // Pass world position to Fragment Shader
+  out vec3 Normal;   // Pass transformed normal to Fragment Shader
+
+  uniform mat4 u_Model;
+  uniform mat4 u_View;
+  uniform mat4 u_Projection;
+
+  void main() {
+    // Calculate the vertex position in world space
+    FragPos = vec3(u_Model * vec4(aPos, 1.0));
+
+    // Transform the normal vector to match world space rotations
+    // (Inverse-transpose handles non-uniform scaling safely)
+    Normal = mat3(transpose(inverse(u_Model))) * aNormal;  
+
+    gl_Position = u_Projection * u_View * vec4(FragPos, 1.0);
+  }
+  """.stripMargin
+
+  private val fragmentSource =
+    """#version 330 core
+  out vec4 FragColor;
+
+  in vec3 FragPos;
+  in vec3 Normal;
+
+  uniform vec3 u_ObjectColor;
+  uniform vec3 u_LightPos;   // Position of your light source (e.g., vec3(2.0, 4.0, 3.0))
+  uniform vec3 u_LightColor; // Color of the light (e.g., vec3(1.0, 1.0, 1.0) for white)
+
+  void main() {
+    // 1. Ambient Light (static background glow)
+    float ambientStrength = 0.25;
+    vec3 ambient = ambientStrength * u_LightColor;
+
+    // 2. Diffuse Light (directional shading)
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(u_LightPos - FragPos);
+
+    // Dot product determines the angle. max() prevents negative values (light from behind)
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * u_LightColor;
+
+    // 3. Combine them to color the pixel
+    vec3 result = (ambient + diffuse) * u_ObjectColor;
+    FragColor = vec4(result, 1.0);
+  }    """.stripMargin
+
 
 
   def start(width: Int, height: Int, title: String): Unit = {
@@ -53,33 +106,29 @@ object Window {
     // 1. Clean, highly readable engine setup sequence
     if (glfw.init() == 0) throw new RuntimeException("GLFW Init Failed")   
 
-    withArena(Confined) { arena =>
+    withArena(Confined) { arena ?=> 
       val camera = new Camera()
-      // Lock and hide mouse cursor for first-person control
+      val window = new GlfwWindow(width,height,glfw, "Meow")
 
-      // 2. ALLOCATE WINDOW STRING NATIVELY FIRST
-      val window = new GlfwWindow(width,height,glfw, "Meow", arena)
+      val inputHandler = new InputHandler(glfw,window,camera,0.05)
 
-      val inputHandler = new InputHandler(glfw,window,camera,0.05)(using arena)
-
-
+      // Any drawing commands should go in window.handle pointer
       glfw.makeContextCurrent(window.handle)
-      glfw.swapInterval(0) // 0 turns off VSync completely!
-      if (glfw.rawMouseMotionSupported()) {
-        // Enable raw mouse motion
-        glfw.setInputMode(window.handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE)
-      }
-      // OpenGL configuration options are now safe to set via the abstraction layer!
+      glfw.setInputMode(window.handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
+
+      // THIS TURNS OFF VSYNC NEED TO 
+      glfw.swapInterval(0) 
+      window.enableRawMouseMotion()
+      // Enables 3D Occlusion
       gl.enable(GL_DEPTH_TEST) 
+      // COlors the sky blue
       gl.clearColor(0.2f, 0.4f, 0.6f, 1.0f) 
 
-      // 4. NOW INSTANTIATE SHADER AND MESH (Passing 'gl' directly!)
-      // Note: Make sure your Shader constructor is updated to just accept your 'gl: GL' wrapper!
-      val shader = new Shader(gl, arena)
+      //val shader = new Shader(gl)
+      // NEW:
+      import ShaderProgram.given
+      val shader = ShaderBuilder.build(gl, ShaderSources(vertexSource, fragmentSource))(using arena)
 
-      // val projectionMatrix = new Matrix4f().perspective(Math.toRadians(45.0).toFloat, 800.0f / 600.0f, 0.1f, 100.0f)
-
-      // --- CUBE DATA ARRAYS ---
       // --- UPGRADED CUBE DATA ARRAYS (24 Vertices) ---
       // Structure: X, Y, Z,   NX, NY, NZ
       val vertices = Array[Float](
@@ -130,34 +179,16 @@ object Window {
         20, 21, 22, 22, 23, 20  // Left
       )
      
-
       // Mesh now only needs our clean unified 'gl' command manager
-      val cubeMesh = new Mesh(vertices, indices, arena, gl)
-      if (glfw.rawMouseMotionSupported()) {
-        glfw.setInputMode(window.handle, glfw.GLFW_RAW_MOUSE_MOTION, glfw.GLFW_TRUE)
-      }
+      val cubeMesh = new Mesh(vertices, indices, gl)
 
-      // 2. Lock and disable the cursor completely
-      glfw.setInputMode(window.handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
-      val lightPosLoc   = shader.getUniformLocation("u_LightPos")
-      val lightColLoc   = shader.getUniformLocation("u_LightColor")
-      val modelLoc      = shader.getUniformLocation("u_Model")
-      val viewLoc       = shader.getUniformLocation("u_View")
-      val projectionLoc = shader.getUniformLocation("u_Projection")
-      val colorLoc      = shader.getUniformLocation("u_ObjectColor")
 
       // For performance, pre-allocate your matrix math targets so you don't allocate objects inside the loop
       val modelMatrix      = new Matrix4f()
       val viewMatrix       = new Matrix4f()
       val projectionMatrix = new Matrix4f()
-      val pWidth  = arena.allocate(ValueLayout.JAVA_INT)
-      val pHeight = arena.allocate(ValueLayout.JAVA_INT)
-
-
       // --- RENDER LOOP ---
-
       var shouldClose = false
-
       var lastTime = System.nanoTime()
       while (!shouldClose) {
         // 1. The top-level zone tracking the cumulative execution time of the entire frame
@@ -185,22 +216,17 @@ object Window {
             shader.use()
 
             // Update Camera Transformations
+            gl.viewport(0, 0, width, height)
             camera.getViewMatrix(viewMatrix)
             camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
             modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
 
-
-            // Set environmental lighting & color uniforms
-            gl.uniform3f(colorLoc, 0.2f, 0.8f, 0.2f)      // Voxel mesh base green color
-            gl.uniform3f(lightPosLoc, 5.0f, 10.0f, 5.0f) // Sun position
-            gl.uniform3f(lightColLoc, 1.0f, 1.0f, 0.95f) // Warm sunlight
-
-
-            // Upload all transformations to the GPU
-
-            shader.setMatrix4f(modelLoc, modelMatrix)
-            shader.setMatrix4f(viewLoc, viewMatrix)
-            shader.setMatrix4f(projectionLoc, projectionMatrix)
+            shader.set("u_ObjectColor", (0.2f, 0.8f, 0.2f))  // Green base color
+            shader.set("u_LightPos",    (5.0f, 10.0f, 5.0f))  // Sun position
+            shader.set("u_LightColor",  (1.0f, 1.0f, 0.95f))  // Warm sunlight
+            shader.set("u_Model",      modelMatrix)            // Model matrix
+            shader.set("u_View",       viewMatrix)             // View matrix
+            shader.set("u_Projection", projectionMatrix)       // Projection matrix
 
           }
 
@@ -212,11 +238,7 @@ object Window {
 
           // --- STAGE 4: FRAME PRESENTATION & OS POLLING ---
           EngineProfiler.zone("Frame Present & Poll") {
-            // Swap buffers (Note: If VSync is enabled, this zone will artificially absorb 
-            // time waiting for the monitor refresh cycle, which is normal!)
             glfw.swapBuffers(window.handle)
-
-            // Poll OS window events
             glfw.pollEvents()
           }
 

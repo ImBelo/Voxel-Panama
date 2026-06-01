@@ -5,8 +5,7 @@ import MemoryUtils.withArena
 
 class Shader(
   private val gl: GL,    // Accepts your unified wrapper
-  private val arena: Arena // The startup arena used for long-lived allocations
-) {
+)(using arena: Arena) {
 
   private val GL_VERTEX_SHADER   = 0x8B31
   private val GL_FRAGMENT_SHADER = 0x8B30
@@ -83,7 +82,7 @@ class Shader(
    * Uses a temporary confined arena so it doesn't leak memory into your main arena.
    */
   def getUniformLocation(name: String): Int = {
-    withArena(ArenaType.Confined){ localArena =>
+    withArena(ArenaType.Confined){ localArena ?=>
       val nameSeg = localArena.allocateFrom(name)
       gl.getUniformLocation(programId, nameSeg)
     }
