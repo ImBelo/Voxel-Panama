@@ -1,0 +1,163 @@
+2026.06.01 13:05:53 INFO  Started: Metals version 1.6.1 in folders '/home/belo/scala/voxel' for client Neovim 0.11.3+v0.11.3.[0m
+2026.06.01 13:05:55 INFO  no build target found for /home/belo/scala/voxel/MouseLook.scala. Using presentation compiler with project's scala-library version: 3.3.6[0m
+2026.06.01 13:05:55 INFO  Attempting to connect to the build server...[0m
+2026.06.01 13:05:55 INFO  Running BSP server List(/home/belo/.local/share/coursier/bin/.scala-cli.aux, bsp, --json-options, /home/belo/scala/voxel/.scala-build/ide-options-v2.json, --json-launcher-options, /home/belo/scala/voxel/.scala-build/ide-launcher-options.json, --envs-file, /home/belo/scala/voxel/.scala-build/ide-envs.json, /home/belo/scala/voxel)[0m
+2026.06.01 13:05:55 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /home/belo/scala/voxel/.metals/bsp.trace.json or /home/belo/.cache/metals/bsp.trace.json[0m
+2026.06.01 13:05:56 INFO  no build target found for /home/belo/scala/voxel/window.scala. Using presentation compiler with project's scala-library version: 3.3.6[0m
+2026.06.01 13:05:56 INFO  BSP server: Downloading https://repo1.maven.org/maven2/org/joml/joml/1.10.8/joml-1.10.8-sources.jar[0m
+2026.06.01 13:05:58 INFO  BSP server: Downloaded https://repo1.maven.org/maven2/org/joml/joml/1.10.8/joml-1.10.8-sources.jar[0m
+2026.06.01 13:05:59 INFO  time: Connected to build server in 3.83s[0m
+2026.06.01 13:05:59 INFO  Connected to Build server: scala-cli v1.11.0[0m
+2026.06.01 13:05:59 INFO  time: Imported build in 0.82s[0m
+2026.06.01 13:06:00 INFO  compiling voxel_dfcb79a7c1 (10 scala sources)[0m
+Jun 01, 2026 1:06:04 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5
+2026.06.01 13:06:06 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 9.558s)[0m
+2026.06.01 13:06:06 INFO  compiling voxel_dfcb79a7c1 (10 scala sources)[0m
+2026.06.01 13:06:15 WARN  Could not find java sources in /usr/lib/jvm/src.zip, /usr/lib/jvm/lib/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/lib/src.zip, /usr/lib/jvm/src.zip, /usr/lib/jvm/lib/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/lib/src.zip. Java symbols will not be available.[0m
+2026.06.01 13:06:17 INFO  time: compiled voxel_dfcb79a7c1 in 11s[0m
+2026.06.01 13:06:17 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 21.735s)[0m
+2026.06.01 13:06:17 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:06:17 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:06:22 INFO  time: compiled voxel_dfcb79a7c1 in 4.53s[0m
+Jun 01, 2026 1:06:23 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 3
+2026.06.01 13:06:28 INFO  time: indexed workspace in 27s[0m
+2026.06.01 13:38:54 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:38:54 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 32m 57.907s)[0m
+2026.06.01 13:38:54 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:38:54 INFO  time: compiled voxel_dfcb79a7c1 in 0.88s[0m
+2026.06.01 13:38:55 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:38:56 INFO  time: compiled voxel_dfcb79a7c1 in 1.33s[0m
+2026.06.01 13:39:09 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:39:09 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 33m 12.936s)[0m
+2026.06.01 13:39:09 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:39:09 INFO  time: compiled voxel_dfcb79a7c1 in 0.49s[0m
+2026.06.01 13:39:09 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:39:10 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 33m 14.326s)[0m
+2026.06.01 13:39:10 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:39:10 INFO  time: compiled voxel_dfcb79a7c1 in 0.9s[0m
+2026.06.01 13:40:08 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:40:08 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 34m 11.875s)[0m
+2026.06.01 13:40:08 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:40:09 INFO  time: compiled voxel_dfcb79a7c1 in 1.45s[0m
+2026.06.01 13:41:12 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:41:12 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:41:12 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 35m 16.039s)[0m
+2026.06.01 13:41:12 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:41:13 INFO  time: compiled voxel_dfcb79a7c1 in 0.98s[0m
+2026.06.01 13:43:15 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:15 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 37m 19.26s)[0m
+2026.06.01 13:43:15 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:17 INFO  time: compiled voxel_dfcb79a7c1 in 1.85s[0m
+2026.06.01 13:43:17 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:17 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 37m 21.981s)[0m
+2026.06.01 13:43:17 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:19 INFO  time: compiled voxel_dfcb79a7c1 in 1.43s[0m
+2026.06.01 13:43:25 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:25 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 37m 28.915s)[0m
+2026.06.01 13:43:25 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:26 INFO  time: compiled voxel_dfcb79a7c1 in 1.31s[0m
+2026.06.01 13:43:26 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:26 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 37m 30.917s)[0m
+2026.06.01 13:43:26 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:28 INFO  time: compiled voxel_dfcb79a7c1 in 0.82s[0m
+exception caught when loading class module-info: java.lang.AssertionError: assertion failed: attempt to parse java.lang.Object from classfile
+2026.06.01 13:43:47 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:47 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 37m 51.451s)[0m
+2026.06.01 13:43:47 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:43:47 INFO  time: compiled voxel_dfcb79a7c1 in 0.67s[0m
+2026.06.01 13:49:00 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:49:00 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:00 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 43m 4.284s)[0m
+2026.06.01 13:49:00 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:03 INFO  time: compiled voxel_dfcb79a7c1 in 2.27s[0m
+2026.06.01 13:49:03 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:49:03 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:03 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 43m 7.437s)[0m
+2026.06.01 13:49:03 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:04 INFO  time: compiled voxel_dfcb79a7c1 in 0.79s[0m
+2026.06.01 13:49:04 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:49:22 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:49:23 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:23 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 43m 26.759s)[0m
+2026.06.01 13:49:23 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:49:24 INFO  time: compiled voxel_dfcb79a7c1 in 1.47s[0m
+2026.06.01 13:50:02 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:50:02 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 44m 5.903s)[0m
+2026.06.01 13:50:02 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:50:03 INFO  time: compiled voxel_dfcb79a7c1 in 1.14s[0m
+2026.06.01 13:50:05 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:50:05 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:50:05 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 44m 9.527s)[0m
+2026.06.01 13:50:05 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:50:06 INFO  time: compiled voxel_dfcb79a7c1 in 0.98s[0m
+Jun 01, 2026 1:50:07 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 343
+2026.06.01 13:51:10 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:10 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 45m 14.118s)[0m
+2026.06.01 13:51:10 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:10 INFO  time: compiled voxel_dfcb79a7c1 in 0.4s[0m
+2026.06.01 13:51:10 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:10 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 45m 15.048s)[0m
+2026.06.01 13:51:10 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:11 INFO  time: compiled voxel_dfcb79a7c1 in 0.45s[0m
+2026.06.01 13:51:25 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:25 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 45m 29.614s)[0m
+2026.06.01 13:51:25 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:25 INFO  time: compiled voxel_dfcb79a7c1 in 0.61s[0m
+2026.06.01 13:51:35 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:51:35 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:35 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 45m 39.505s)[0m
+2026.06.01 13:51:35 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:51:35 INFO  time: compiled voxel_dfcb79a7c1 in 0.56s[0m
+2026.06.01 13:53:04 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:53:04 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 47m 8.29s)[0m
+2026.06.01 13:53:04 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:53:04 INFO  time: compiled voxel_dfcb79a7c1 in 0.68s[0m
+2026.06.01 13:53:36 WARN  Could not load snapshot text for /home/belo/scala/voxel/MouseLook.scala[0m
+2026.06.01 13:53:36 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:53:36 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 47m 40.095s)[0m
+2026.06.01 13:53:36 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:53:36 INFO  time: compiled voxel_dfcb79a7c1 in 0.46s[0m
+Jun 01, 2026 1:54:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 492
+2026.06.01 13:55:15 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:55:15 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 49m 19.283s)[0m
+2026.06.01 13:55:15 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:55:15 INFO  time: compiled voxel_dfcb79a7c1 in 0.72s[0m
+2026.06.01 13:55:34 WARN  Could not load snapshot text for /home/belo/scala/voxel/window.scala[0m
+2026.06.01 13:55:34 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:55:34 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 49m 38.102s)[0m
+2026.06.01 13:55:34 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 13:55:34 INFO  time: compiled voxel_dfcb79a7c1 in 0.59s[0m
+2026.06.01 14:01:12 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:12 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 55m 15.869s)[0m
+2026.06.01 14:01:12 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:12 INFO  time: compiled voxel_dfcb79a7c1 in 0.48s[0m
+2026.06.01 14:01:12 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:13 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 55m 17.123s)[0m
+2026.06.01 14:01:13 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:13 INFO  time: compiled voxel_dfcb79a7c1 in 0.33s[0m
+2026.06.01 14:01:20 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:20 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 55m 24.476s)[0m
+2026.06.01 14:01:20 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:01:20 INFO  time: compiled voxel_dfcb79a7c1 in 0.74s[0m
+Jun 01, 2026 2:01:51 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 609
+2026.06.01 14:02:23 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:02:23 INFO  Deduplicating compilation of voxel_dfcb79a7c1 from bsp client 'scala-cli 1.11.0' (since 56m 27.157s)[0m
+2026.06.01 14:02:23 INFO  compiling voxel_dfcb79a7c1 (1 scala source)[0m
+2026.06.01 14:02:23 INFO  time: compiled voxel_dfcb79a7c1 in 0.76s[0m
+2026.06.01 14:04:00 INFO  BSP server: [warn] ./Voxel-Panama/project.scala:1:1[0m
+2026.06.01 14:04:00 INFO  BSP server: [warn] Using directives detected in multiple files. It is recommended to keep them centralized in the /home/belo/scala/voxel/project.scala file.[0m
+2026.06.01 14:04:00 INFO  compiling voxel_dfcb79a7c1 (10 scala sources)[0m
+2026.06.01 14:04:02 INFO  time: compiled voxel_dfcb79a7c1 in 2.16s[0m
+2026.06.01 14:04:02 INFO  compiling voxel_dfcb79a7c1 (10 scala sources)[0m
+2026.06.01 14:04:04 INFO  time: compiled voxel_dfcb79a7c1 in 1.58s[0m
+2026.06.01 14:04:05 WARN  Could not find java sources in /usr/lib/jvm/src.zip, /usr/lib/jvm/lib/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/lib/src.zip, /usr/lib/jvm/src.zip, /usr/lib/jvm/lib/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/src.zip, /usr/lib/jvm/java-21-openjdk-amd64/lib/src.zip. Java symbols will not be available.[0m
+2026.06.01 14:04:05 INFO  time: indexed workspace in 5.01s[0m
+2026.06.01 14:04:05 INFO  BSP server: [warn] ./Voxel-Panama/project.scala:1:1[0m
+2026.06.01 14:04:05 INFO  BSP server: [warn] Using directives detected in multiple files. It is recommended to keep them centralized in the /home/belo/scala/voxel/project.scala file.[0m
+2026.06.01 14:04:05 INFO  compiling voxel_dfcb79a7c1 (10 scala sources)[0m
+2026.06.01 14:04:05 INFO  time: compiled voxel_dfcb79a7c1 in 0.71s[0m

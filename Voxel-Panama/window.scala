@@ -61,7 +61,7 @@ object Window {
       val camera = new Camera()
 
       // Lock and hide mouse cursor for first-person control
-      val mouseLook = new MouseLook(camera,0.05f)
+      val mouseLook = new MouseLook(camera,0.00005f)
 
 
       // 2. ALLOCATE WINDOW STRING NATIVELY FIRST
@@ -121,6 +121,12 @@ object Window {
 
       // Mesh now only needs our clean unified 'gl' command manager
       val cubeMesh = new Mesh(vertices, indices, arena, gl)
+      val widthArr = arena.allocate(ValueLayout.JAVA_INT)
+      val heightArr = arena.allocate(ValueLayout.JAVA_INT)
+
+      glfw.getFramebufferSize(windowPtr, widthArr, heightArr)
+      val centerX = widthArr.get(ValueLayout.JAVA_INT, 0) / 2.0
+      val centerY = heightArr.get(ValueLayout.JAVA_INT, 0) / 2.0
       if (glfw.rawMouseMotionSupported()) {
         glfw.setInputMode(windowPtr, glfw.GLFW_RAW_MOUSE_MOTION, glfw.GLFW_TRUE)
       }
@@ -164,7 +170,6 @@ object Window {
 
     val moveVector = new Vector3f()
     val rightVector = new Vector3f()
-    val horizontalForward = Vector3f(camera.forward.x, 0f, camera.forward.z).normalize()
 
     val verticalSpeed = 0.05f
 
@@ -184,31 +189,33 @@ object Window {
     if (shiftPressed == 1) {
       camera.position.y -= verticalSpeed
     }
+    // Press W -> Move Forward
     val wPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_W)
+
     if (wPressed == 1) {
-      horizontalForward.mul(speed, moveVector)
+      camera.forward.mul(speed, moveVector)
       camera.position.add(moveVector)
     }
 
-    // Press S -> Move Backward (horizontal only)
+    // Press S -> Move Backward
     val sPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_S)
     if (sPressed == 1) {
-      horizontalForward.mul(speed, moveVector)
+      camera.forward.mul(speed, moveVector)
       camera.position.sub(moveVector)
     }
 
-    // Press A -> Strafe Left (already horizontal, but use horizontalForward)
+    // Press A -> Strafe Left
     val aPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_A)
     if (aPressed == 1) {
-      horizontalForward.cross(camera.up, rightVector).normalize()  // Already works
+      camera.forward.cross(camera.up, rightVector).normalize()
       rightVector.mul(speed, moveVector)
       camera.position.sub(moveVector)
     }
 
-    // Press D -> Strafe Right (already horizontal, but use horizontalForward)
+    // Press D -> Strafe Right
     val dPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_D)
     if (dPressed == 1) {
-      horizontalForward.cross(camera.up, rightVector).normalize()
+      camera.forward.cross(camera.up, rightVector).normalize()
       rightVector.mul(speed, moveVector)
       camera.position.add(moveVector)
     }
