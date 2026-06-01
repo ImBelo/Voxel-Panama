@@ -23,12 +23,6 @@ object Window {
   private val GLFW_RAW_MOUSE_MOTION = 0x00033001  // GLFW 3.3+ constant
   private val GLFW_TRUE = 1
 
-  private val GLFW_KEY_W = 87
-  private val GLFW_KEY_S = 83
-  private val GLFW_KEY_A = 65
-  private val GLFW_KEY_D = 68
-  private val GLFW_KEY_SPACE = 32
-  private val GLFW_KEY_LEFT_SHIFT = 340
   var firstMouse: Boolean = true
   var lastX: Double = 0.0
   var lastY: Double = 0.0
@@ -62,29 +56,18 @@ object Window {
     withArena(Confined) { arena =>
       val camera = new Camera()
       // Lock and hide mouse cursor for first-person control
-      val mouseLook = new MouseLook(camera,0.05f)
-
 
       // 2. ALLOCATE WINDOW STRING NATIVELY FIRST
-      val titleBytes = title.getBytes(StandardCharsets.UTF_8)
-      val windowTitle = arena.allocate(titleBytes.length + 1)
-      MemorySegment.copy(titleBytes, 0, windowTitle, ValueLayout.JAVA_BYTE, 0, titleBytes.length)
-      windowTitle.set(ValueLayout.JAVA_BYTE, titleBytes.length, 0.toByte)
+      val window = new GlfwWindow(width,height,glfw, "Meow", arena)
 
-      // 3. CREATE WINDOW AND ACTIVATE CONTEXT IMMEDIATELY
-      val windowPtr = glfw.createPrimaryWindow(windowTitle)
-      if (windowPtr == MemorySegment.NULL) { 
-        glfw.terminate()
-        throw new RuntimeException("Window Generation Failed") 
-      }
-
-      mouseLook.register(windowPtr, glfw, arena)
+      val inputHandler = new InputHandler(glfw,window,camera,0.05)(using arena)
 
 
-      glfw.makeContextCurrent(windowPtr)
+      glfw.makeContextCurrent(window.handle)
+      glfw.swapInterval(0) // 0 turns off VSync completely!
       if (glfw.rawMouseMotionSupported()) {
         // Enable raw mouse motion
-        glfw.setInputMode(windowPtr, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE)
+        glfw.setInputMode(window.handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE)
       }
       // OpenGL configuration options are now safe to set via the abstraction layer!
       gl.enable(GL_DEPTH_TEST) 
@@ -146,48 +129,16 @@ object Window {
         16, 17, 18, 18, 19, 16, // Right
         20, 21, 22, 22, 23, 20  // Left
       )
-      // 6 floats total per vertex (X, Y, Z, NX, NY, NZ) * 4 bytes per float = 24 bytes
-      val stride = 6 * java.lang.Float.BYTES
-
-      // 1. Create a true C NULL pointer representation
-      val nullSegment = MemorySegment.NULL
-
-      // 2. Position Attribute (Starts at offset 0 bytes from NULL)
-      val posOffset: Long = nullSegment.address() // This equals 0L safely
-
-      gl.vertexAttribPointer(
-        0, 
-        3, 
-        GL_FLOAT, 
-        0.toByte, 
-        stride, 
-        posOffset
-      )
-      gl.enableVertexAttribArray(0)
-
-
-      // 3. Normal Attribute (Starts at offset 12 bytes from NULL)
-      // If your wrapper maps the pointer to a Long, we add the bytes directly to the NULL address
-      val normalOffset: Long = nullSegment.address() + (3L * java.lang.Float.BYTES)
-
-      gl.vertexAttribPointer(
-        1, 
-        3, 
-        GL_FLOAT, 
-        0.toByte, 
-        stride, 
-        normalOffset
-      )
-      gl.enableVertexAttribArray(1)
+     
 
       // Mesh now only needs our clean unified 'gl' command manager
       val cubeMesh = new Mesh(vertices, indices, arena, gl)
       if (glfw.rawMouseMotionSupported()) {
-        glfw.setInputMode(windowPtr, glfw.GLFW_RAW_MOUSE_MOTION, glfw.GLFW_TRUE)
+        glfw.setInputMode(window.handle, glfw.GLFW_RAW_MOUSE_MOTION, glfw.GLFW_TRUE)
       }
 
       // 2. Lock and disable the cursor completely
-      glfw.setInputMode(windowPtr, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
+      glfw.setInputMode(window.handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
       val lightPosLoc   = shader.getUniformLocation("u_LightPos")
       val lightColLoc   = shader.getUniformLocation("u_LightColor")
       val modelLoc      = shader.getUniformLocation("u_Model")
@@ -204,107 +155,79 @@ object Window {
 
 
       // --- RENDER LOOP ---
+
       var shouldClose = false
+
+      var lastTime = System.nanoTime()
       while (!shouldClose) {
-        // Use our abstract glfw handler to process inputs
-        processInput(windowPtr, camera, glfw)
-        mouseLook.update(arena)  // Pass arena for each frame
+        // 1. The top-level zone tracking the cumulative execution time of the entire frame
+        val currentTime = System.nanoTime()
+        val deltaTime = ((currentTime - lastTime) / 1_000_000_000.0).toFloat
+        lastTime = currentTime // Update for the next frame
+        EngineProfiler.zone("Total Frame") {
 
-        glfw.getFramebufferSize(windowPtr, pWidth, pHeight)
-        val width  = pWidth.get(ValueLayout.JAVA_INT, 0).toFloat
-        val height = pHeight.get(ValueLayout.JAVA_INT, 0).toFloat
-        val aspectRatio = if (height > 0) width / height else 1.0f
+          // --- STAGE 1: INPUT PROCESSING ---
+          EngineProfiler.zone("Input Processing") {
+            // Use our abstract glfw handler to process inputs
+            inputHandler.update(deltaTime)
+          }
 
-        camera.getProjectionMatrix(projectionMatrix, aspectRatio)
-        shader.setMatrix4f(projectionLoc, projectionMatrix)
+          // --- STAGE 2: CAMERA & MATRIX CALCULATIONS ---
+          EngineProfiler.zone("Math & Uniform Updates") {
 
-        // Clear screen via clean API call
-        gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        shader.use()
-        gl.uniform3f(colorLoc, 0.2f, 0.8f, 0.2f)      // Give your voxel mesh a clean base green color
-        gl.uniform3f(lightPosLoc, 5.0f, 10.0f, 5.0f) // Sun position up high
-        gl.uniform3f(lightColLoc, 1.0f, 1.0f, 0.95f) // Warm slightly yellow sunlight
+            // Clear screen via clean API call
+            EngineProfiler.zone("GPU clear") {
+              gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            }
 
-        // 3. Update Camera Transformations
-        // Fetch current view and projection calculations from your camera systems
-        camera.getViewMatrix(viewMatrix)
-        camera.getProjectionMatrix(projectionMatrix,aspectRatio) // Assuming you have an aspect ratio calculator here
+            // Bind shader program BEFORE setting uniforms!
 
-        // Reset model matrix to identity (0, 0, 0 center)
-        modelMatrix.identity() 
+            shader.use()
 
-        // 4. Upload all transformations to the GPU
-        shader.setMatrix4f(modelLoc, modelMatrix)
-        shader.setMatrix4f(viewLoc, viewMatrix)
-        shader.setMatrix4f(projectionLoc, projectionMatrix)       
-        cubeMesh.draw()
+            // Update Camera Transformations
+            camera.getViewMatrix(viewMatrix)
+            camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
+            modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
 
-        // Swap buffers and poll OS window states cleanly
-        glfw.swapBuffers(windowPtr)
-        glfw.pollEvents()
 
-        // Type-safe status check via wrapper
-        if (glfw.windowShouldClose(windowPtr) != 0) {
-          shouldClose = true
+            // Set environmental lighting & color uniforms
+            gl.uniform3f(colorLoc, 0.2f, 0.8f, 0.2f)      // Voxel mesh base green color
+            gl.uniform3f(lightPosLoc, 5.0f, 10.0f, 5.0f) // Sun position
+            gl.uniform3f(lightColLoc, 1.0f, 1.0f, 0.95f) // Warm sunlight
+
+
+            // Upload all transformations to the GPU
+
+            shader.setMatrix4f(modelLoc, modelMatrix)
+            shader.setMatrix4f(viewLoc, viewMatrix)
+            shader.setMatrix4f(projectionLoc, projectionMatrix)
+
+          }
+
+          // --- STAGE 3: GPU RENDER DISPATCH ---
+          EngineProfiler.zone("GPU Draw Dispatch") {
+            gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            cubeMesh.draw()
+          }
+
+          // --- STAGE 4: FRAME PRESENTATION & OS POLLING ---
+          EngineProfiler.zone("Frame Present & Poll") {
+            // Swap buffers (Note: If VSync is enabled, this zone will artificially absorb 
+            // time waiting for the monitor refresh cycle, which is normal!)
+            glfw.swapBuffers(window.handle)
+
+            // Poll OS window events
+            glfw.pollEvents()
+          }
+
+          // Check if window should exit
+          if (glfw.windowShouldClose(window.handle) != 0) {
+            shouldClose = true
+          }
         }
       }
+      glfw.terminate()
     }
 
-    glfw.terminate()
-  }
-
-  def processInput(windowPtr: MemorySegment, camera: Camera, glfw: Glfw): Unit = {
-    val speed = 0.05f
-
-    val moveVector = new Vector3f()
-    val rightVector = new Vector3f()
-    val horizontalForward = Vector3f(camera.forward.x, 0f, camera.forward.z).normalize()
-
-    val verticalSpeed = 0.05f
-
-    if (glfw.getKey(windowPtr, 256) == 1) { 
-      // Force the window to flag itself for closure
-      // Assuming you have glfwSetWindowShouldClose bound:
-      glfw.setWindowShouldClose(windowPtr, 1) 
-    }
-    // 1. Press Space -> Move straight UP (Increase Y)
-    val spacePressed: Int = glfw.getKey(windowPtr, GLFW_KEY_SPACE)
-    if (spacePressed == 1) {
-      camera.position.y += verticalSpeed
-    }
-
-    // 2. Press Left Shift -> Move straight DOWN (Decrease Y)
-    val shiftPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_LEFT_SHIFT)
-    if (shiftPressed == 1) {
-      camera.position.y -= verticalSpeed
-    }
-    val wPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_W)
-    if (wPressed == 1) {
-      horizontalForward.mul(speed, moveVector)
-      camera.position.add(moveVector)
-    }
-
-    // Press S -> Move Backward (horizontal only)
-    val sPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_S)
-    if (sPressed == 1) {
-      horizontalForward.mul(speed, moveVector)
-      camera.position.sub(moveVector)
-    }
-
-    // Press A -> Strafe Left (already horizontal, but use horizontalForward)
-    val aPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_A)
-    if (aPressed == 1) {
-      horizontalForward.cross(camera.up, rightVector).normalize()  // Already works
-      rightVector.mul(speed, moveVector)
-      camera.position.sub(moveVector)
-    }
-
-    // Press D -> Strafe Right (already horizontal, but use horizontalForward)
-    val dPressed: Int = glfw.getKey(windowPtr, GLFW_KEY_D)
-    if (dPressed == 1) {
-      horizontalForward.cross(camera.up, rightVector).normalize()
-      rightVector.mul(speed, moveVector)
-      camera.position.add(moveVector)
-    }
   }
 }

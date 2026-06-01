@@ -27,63 +27,61 @@ class GL(lookup: SymbolLookup, linker: Linker) {
   private val glUseProgram_H = linker.downcallHandle(
     lookup.find("glUseProgram").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-
-  private val glGetUniformLocation_H = linker.downcallHandle(lookup.find("glGetUniformLocation").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
-  private val glUniformMatrix4fv_H = linker.downcallHandle(lookup.find("glUniformMatrix4fv").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS))
-  private val glClearColor_H = linker.downcallHandle(lookup.find("glClearColor").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT))
-  private val glClear_H = linker.downcallHandle(lookup.find("glClear").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private val glEnable_H = linker.downcallHandle(lookup.find("glEnable").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private val glGenBuffers_H = linker.downcallHandle(lookup.find("glGenBuffers").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
-  private val glBindBuffer_H = linker.downcallHandle(lookup.find("glBindBuffer").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private val glBufferData_H = linker.downcallHandle(lookup.find("glBufferData").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
-  private val glEnableVertexAttribArray_H = linker.downcallHandle(lookup.find("glEnableVertexAttribArray").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private val glVertexAttribPointer_H = linker.downcallHandle(lookup.find("glVertexAttribPointer").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
-  private val glDrawElements_H = linker.downcallHandle(lookup.find("glDrawElements").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
+  private val glGetUniformLocation_H = linker.downcallHandle(
+    lookup.find("glGetUniformLocation").get(),
+    FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
+  private val glUniformMatrix4fv_H = linker.downcallHandle(
+    lookup.find("glUniformMatrix4fv").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS))
+  private val glClearColor_H = linker.downcallHandle(
+    lookup.find("glClearColor").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT))
+  private val glClear_H = linker.downcallHandle(
+    lookup.find("glClear").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glEnable_H = linker.downcallHandle(
+    lookup.find("glEnable").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glGenBuffers_H = linker.downcallHandle(
+    lookup.find("glGenBuffers").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
+  private val glBindBuffer_H = linker.downcallHandle(
+    lookup.find("glBindBuffer").get(), 
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
+  private val glBufferData_H = linker.downcallHandle(
+    lookup.find("glBufferData").get(), 
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
+  private val glEnableVertexAttribArray_H = linker.downcallHandle(
+    lookup.find("glEnableVertexAttribArray").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glVertexAttribPointer_H = linker.downcallHandle(
+    lookup.find("glVertexAttribPointer").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT,
+    ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
+  private val glDrawElements_H = linker.downcallHandle(
+    lookup.find("glDrawElements").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
   private val glUniform3f_H: MethodHandle = linker.downcallHandle(
     lookup.find("glUniform3f").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT)
   )
   private val glDeleteShader_H: MethodHandle = linker.downcallHandle(
-  lookup.find("glDeleteShader")
-    .orElseThrow(() => new NoSuchElementException("Function glDeleteShader not found")),
-  // Function signature: void glDeleteShader(GLuint shader);
-  FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
-)
-  private val glBindVertexArrayHandle: MethodHandle = {
-    val address = lookup.find("glBindVertexArray")
-      .orElseThrow(() => new RuntimeException("OpenGL Function 'glBindVertexArray' not found!"))
-    
-    // void return type, takes one int parameter
-    val descriptor = FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
-    linker.downcallHandle(address, descriptor)
-  }
-  private val glGenVertexArraysHandle: MethodHandle = {
-    val address = lookup.find("glGenVertexArrays")
-      .orElseThrow(() => new RuntimeException("OpenGL Function 'glGenVertexArrays' not found!"))
-    
-    // void return type, takes an int (count) and a pointer (MemorySegment)
-    val descriptor = FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
-    linker.downcallHandle(address, descriptor)
-  }
+    lookup.find("glDeleteShader").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+  )
+  private val glBindVertexArrayHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glBindVertexArray").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+  )
+  private val glGenVertexArraysHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glGenVertexArrays").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+  )
   def genVertexArrays(n: Int, arraysOutPointer: MemorySegment): Unit = {
-    try {
-      glGenVertexArraysHandle.invokeExact(n, arraysOutPointer)
-    } catch {
-      case e: Throwable => throw new RuntimeException("Failed to execute glGenVertexArrays", e)
-    }
+    glGenVertexArraysHandle.invokeExact(n, arraysOutPointer)
   }
-
-  /**
-   * Binds a vertex array object.
-   * Wrapper for native: void glBindVertexArray(GLuint array);
-   */
   def bindVertexArray(arrayId: Int): Unit = {
-    try {
-      // Invoke the native handle using Panama's type-safe method invocation
-      glBindVertexArrayHandle.invokeExact(arrayId)
-    } catch {
-      case e: Throwable => throw new RuntimeException("Failed to execute glBindVertexArray", e)
-    }
+    glBindVertexArrayHandle.invokeExact(arrayId)
   }
 
   def deleteShader(shader: Int): Unit = 
@@ -114,12 +112,9 @@ class GL(lookup: SymbolLookup, linker: Linker) {
     
   def clearColor(r: Float, g: Float, b: Float, a: Float): Unit = glClearColor_H.invoke(r, g, b, a)
 
-  
   def clear(mask: Int): Unit = glClear_H.invoke(mask)
-
   
   def enable(cap: Int): Unit = glEnable_H.invoke(cap)
-
   
   def genBuffers(n: Int, buffers: MemorySegment): Unit = glGenBuffers_H.invoke(n, buffers)
   
@@ -132,7 +127,6 @@ class GL(lookup: SymbolLookup, linker: Linker) {
   
   def vertexAttribPointer(index: Int, size: Int, `type`: Int, normalized: Byte, stride: Int, pointer: Long): Unit = 
     glVertexAttribPointer_H.invoke(index, size, `type`, normalized, stride, pointer)
-    
 
   def drawElements(mode: Int, count: Int, `type`: Int, indices: Long): Unit = 
     glDrawElements_H.invoke(mode, count, `type`, indices)

@@ -20,6 +20,23 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
   val GLFW_TRUE = 1
   val GLFW_RAW_MOUSE_MOTION = 0x00033005
   val GLFW_CURSOR_ARROW = 0x00036001 // Standard arrow shape constant if needed
+
+  val GLFW_KEY_W: Int             = 87
+  val GLFW_KEY_A: Int             = 65
+  val GLFW_KEY_S: Int             = 83
+  val GLFW_KEY_D: Int             = 68
+
+  // --- Action Keys ---
+  val GLFW_KEY_SPACE: Int         = 32
+  val GLFW_KEY_LEFT_SHIFT: Int    = 340
+  val GLFW_KEY_LEFT_CONTROL: Int  = 341
+  val GLFW_KEY_ESCAPE: Int        = 256
+  val GLFW_KEY_ENTER: Int         = 257
+
+  val GLFW_RELEASE: Int  = 0
+  val GLFW_PRESS: Int    = 1
+  val GLFW_REPEAT: Int   = 2
+
   private val glfwGetPrimaryMonitor_H = linker.downcallHandle(
   lookup.find("glfwGetPrimaryMonitor").get(),
   FunctionDescriptor.of(ValueLayout.ADDRESS)
@@ -55,7 +72,13 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
     lookup.find("glfwSetCursorPosCallback").get(),
     FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
   )
-
+  private val glfwSwapIntervalHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glfwSwapInterval").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+  )
+  
+  def swapInterval(interval: Int): Unit = 
+    glfwSwapIntervalHandle.invokeExact(interval)
  
   def getWindowSize(window: MemorySegment,arena: Arena): (Int, Int) = {
     // Allocate native memory for output values
@@ -136,10 +159,10 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
   
   def createWindow(w: Int, h: Int, title: MemorySegment, monitor: MemorySegment, share: MemorySegment): MemorySegment = 
     glfwCreateWindow_H.invokeExact(w, h, title, monitor, share).asInstanceOf[MemorySegment]
-  def createPrimaryWindow(title: MemorySegment): MemorySegment = {
+  def createPrimaryWindow(width: Int,height: Int,title: MemorySegment): MemorySegment = {
     val monitorPtr = getPrimaryMonitor()
 
-    val windowPtr = createWindow(1366,768,title, monitorPtr, MemorySegment.NULL)
+    val windowPtr = createWindow(width,height,title, monitorPtr, MemorySegment.NULL)
 
     if (windowPtr == MemorySegment.NULL) {
       throw new RuntimeException("Failed to create fullscreen GLFW window")
