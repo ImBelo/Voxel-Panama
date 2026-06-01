@@ -1,18 +1,32 @@
 // GL.scala
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
+import javax.xml.validation.SchemaFactoryLoader
 
 
 class GL(lookup: SymbolLookup, linker: Linker) {
 
-
-  private val glCreateShader_H = linker.downcallHandle(lookup.find("glCreateShader").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private val glShaderSource_H = linker.downcallHandle(lookup.find("glShaderSource").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
-  private val glCompileShader_H = linker.downcallHandle(lookup.find("glCompileShader").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private val glCreateProgram_H = linker.downcallHandle(lookup.find("glCreateProgram").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT))
-  private val glAttachShader_H = linker.downcallHandle(lookup.find("glAttachShader").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private val glLinkProgram_H = linker.downcallHandle(lookup.find("glLinkProgram").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private val glUseProgram_H = linker.downcallHandle(lookup.find("glUseProgram").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glCreateShader_H = linker.downcallHandle(
+    lookup.find("glCreateShader").get(),
+    FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
+  private val glShaderSource_H = linker.downcallHandle(
+    lookup.find("glShaderSource").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
+  private val glCompileShader_H = linker.downcallHandle(
+    lookup.find("glCompileShader").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glCreateProgram_H = linker.downcallHandle(
+    lookup.find("glCreateProgram").get(),
+    FunctionDescriptor.of(ValueLayout.JAVA_INT))
+  private val glAttachShader_H = linker.downcallHandle(
+    lookup.find("glAttachShader").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
+  private val glLinkProgram_H = linker.downcallHandle(
+    lookup.find("glLinkProgram").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
+  private val glUseProgram_H = linker.downcallHandle(
+    lookup.find("glUseProgram").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
 
   private val glGetUniformLocation_H = linker.downcallHandle(lookup.find("glGetUniformLocation").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
   private val glUniformMatrix4fv_H = linker.downcallHandle(lookup.find("glUniformMatrix4fv").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS))
@@ -25,8 +39,59 @@ class GL(lookup: SymbolLookup, linker: Linker) {
   private val glEnableVertexAttribArray_H = linker.downcallHandle(lookup.find("glEnableVertexAttribArray").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
   private val glVertexAttribPointer_H = linker.downcallHandle(lookup.find("glVertexAttribPointer").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
   private val glDrawElements_H = linker.downcallHandle(lookup.find("glDrawElements").get(), FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
+  private val glUniform3f_H: MethodHandle = linker.downcallHandle(
+    lookup.find("glUniform3f").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT)
+  )
+  private val glDeleteShader_H: MethodHandle = linker.downcallHandle(
+  lookup.find("glDeleteShader")
+    .orElseThrow(() => new NoSuchElementException("Function glDeleteShader not found")),
+  // Function signature: void glDeleteShader(GLuint shader);
+  FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+)
+  private val glBindVertexArrayHandle: MethodHandle = {
+    val address = lookup.find("glBindVertexArray")
+      .orElseThrow(() => new RuntimeException("OpenGL Function 'glBindVertexArray' not found!"))
+    
+    // void return type, takes one int parameter
+    val descriptor = FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+    linker.downcallHandle(address, descriptor)
+  }
+  private val glGenVertexArraysHandle: MethodHandle = {
+    val address = lookup.find("glGenVertexArrays")
+      .orElseThrow(() => new RuntimeException("OpenGL Function 'glGenVertexArrays' not found!"))
+    
+    // void return type, takes an int (count) and a pointer (MemorySegment)
+    val descriptor = FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+    linker.downcallHandle(address, descriptor)
+  }
+  def genVertexArrays(n: Int, arraysOutPointer: MemorySegment): Unit = {
+    try {
+      glGenVertexArraysHandle.invokeExact(n, arraysOutPointer)
+    } catch {
+      case e: Throwable => throw new RuntimeException("Failed to execute glGenVertexArrays", e)
+    }
+  }
 
-  // --- PUBLIC WRAPPED API ---
+  /**
+   * Binds a vertex array object.
+   * Wrapper for native: void glBindVertexArray(GLuint array);
+   */
+  def bindVertexArray(arrayId: Int): Unit = {
+    try {
+      // Invoke the native handle using Panama's type-safe method invocation
+      glBindVertexArrayHandle.invokeExact(arrayId)
+    } catch {
+      case e: Throwable => throw new RuntimeException("Failed to execute glBindVertexArray", e)
+    }
+  }
+
+  def deleteShader(shader: Int): Unit = 
+    glDeleteShader_H.invokeExact(shader)
+
+  def uniform3f(loc: Int,r: Float, g: Float, b: Float) = 
+    glUniform3f_H.invoke(loc,r,g,b)
+
   def createShader(shaderType: Int): Int = glCreateShader_H.invokeExact(shaderType)
   
   def shaderSource(shader: Int, count: Int, stringArray: MemorySegment, lengthArray: MemorySegment): Unit = 
@@ -41,7 +106,6 @@ class GL(lookup: SymbolLookup, linker: Linker) {
   def linkProgram(program: Int): Unit = glLinkProgram_H.invoke(program)
   
   def useProgram(program: Int): Unit = glUseProgram_H.invoke(program)
-
   
   def getUniformLocation(program: Int, name: MemorySegment): Int = glGetUniformLocation_H.invokeExact(program, name)
   

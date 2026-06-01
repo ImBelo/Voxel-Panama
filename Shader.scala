@@ -1,82 +1,134 @@
-// Shader.scala
 import java.lang.foreign.*
 import java.nio.charset.StandardCharsets
 import org.joml.Matrix4f
+import MemoryUtils.withArena
 
 class Shader(
-
-  gl: GL, // Accepts the unified wrapper!
-  arena: Arena
+  private val gl: GL,    // Accepts your unified wrapper
+  private val arena: Arena // The startup arena used for long-lived allocations
 ) {
 
   private val GL_VERTEX_SHADER   = 0x8B31
   private val GL_FRAGMENT_SHADER = 0x8B30
 
-  // 1. Simple Vertex Shader source code
+  // --- 1. PRE-ALLOCATED HOT PATCH BUFFERS ---
+  // These are allocated ONCE per shader instance at startup.
+  // The render loop will overwrite these instead of creating new allocations!
+  private val matrixBuffer: MemorySegment = arena.allocate(16 * 4) // 16 floats * 4 bytes
+  private val matArray: Array[Float]     = new Array[Float](16)
+
+  // --- 2. SHADER SOURCE CODE ---
   private val vertexSource =
     """#version 330 core
-      |layout (location = 0) in vec3 aPos;
-      |uniform mat4 u_View;
-      |uniform mat4 u_Projection;
-      |void main() {
-      |   gl_Position = u_Projection * u_View * vec4(aPos, 1.0);
-      |}
-    """.stripMargin
+  layout (location = 0) in vec3 aPos;
+  layout (location = 1) in vec3 aNormal; // New: Normal direction for each vertex
 
+  out vec3 FragPos;  // Pass world position to Fragment Shader
+  out vec3 Normal;   // Pass transformed normal to Fragment Shader
 
-  // 2. Simple Fragment Shader source code (solid white)
+  uniform mat4 u_Model;
+  uniform mat4 u_View;
+  uniform mat4 u_Projection;
+
+  void main() {
+    // Calculate the vertex position in world space
+    FragPos = vec3(u_Model * vec4(aPos, 1.0));
+
+    // Transform the normal vector to match world space rotations
+    // (Inverse-transpose handles non-uniform scaling safely)
+    Normal = mat3(transpose(inverse(u_Model))) * aNormal;  
+
+    gl_Position = u_Projection * u_View * vec4(FragPos, 1.0);
+  }
+  """.stripMargin
+
   private val fragmentSource =
     """#version 330 core
-      |out vec4 FragColor;
-      |void main() {
-      |   FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-      |}
-    """.stripMargin
+  out vec4 FragColor;
 
+  in vec3 FragPos;
+  in vec3 Normal;
+
+  uniform vec3 u_ObjectColor;
+  uniform vec3 u_LightPos;   // Position of your light source (e.g., vec3(2.0, 4.0, 3.0))
+  uniform vec3 u_LightColor; // Color of the light (e.g., vec3(1.0, 1.0, 1.0) for white)
+
+  void main() {
+    // 1. Ambient Light (static background glow)
+    float ambientStrength = 0.25;
+    vec3 ambient = ambientStrength * u_LightColor;
+
+    // 2. Diffuse Light (directional shading)
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(u_LightPos - FragPos);
+
+    // Dot product determines the angle. max() prevents negative values (light from behind)
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * u_LightColor;
+
+    // 3. Combine them to color the pixel
+    vec3 result = (ambient + diffuse) * u_ObjectColor;
+    FragColor = vec4(result, 1.0);
+  }    """.stripMargin
+
+  // Compile and link immediately when the object is instantiated
   val programId: Int = compileProgram()
-
 
   def use(): Unit = gl.useProgram(programId)
 
-  // Uploads a JOML Matrix4f down to our GPU uniform variable slot
-  def setMatrix4f(name: String, matrix: Matrix4f): Unit = {
+  // --- 3. HIGH PERFORMANCE UNIFORM UPLOADS ---
 
-    val nameBytes = name.getBytes(StandardCharsets.UTF_8)
-    val nameSeg = arena.allocate(nameBytes.length + 1)
-    MemorySegment.copy(nameBytes, 0, nameSeg, ValueLayout.JAVA_BYTE, 0, nameBytes.length)
-    nameSeg.set(ValueLayout.JAVA_BYTE, nameBytes.length, 0.toByte)
-
-    val location: Int = gl.getUniformLocation(programId, nameSeg)
-    if (location != -1) {
-      val matBuffer = arena.allocate(16 * 4) // 16 floats, 4 bytes each
-      val matArray = new Array[Float](16)
-      matrix.get(matArray)
-      MemorySegment.copy(matArray, 0, matBuffer, ValueLayout.JAVA_FLOAT, 0, 16)
-      
-      gl.uniformMatrix4fv(location, 1, 0.toByte, matBuffer)
+  /**
+   * Helper to look up uniform locations safely at startup.
+   * Uses a temporary confined arena so it doesn't leak memory into your main arena.
+   */
+  def getUniformLocation(name: String): Int = {
+    withArena(ArenaType.Confined){ localArena =>
+      val nameSeg = localArena.allocateFrom(name)
+      gl.getUniformLocation(programId, nameSeg)
     }
   }
 
+  /**
+   * Uploads a JOML Matrix4f down to our GPU uniform variable slot without allocating any frame memory.
+   */
+  def setMatrix4f(location: Int, matrix: Matrix4f): Unit = {
+    // 1. Dump matrix data into the reusable Java heap array
+    matrix.get(matArray)
+
+    // 2. Copy the Java array into the pre-allocated off-heap buffer
+    MemorySegment.copy(matArray, 0, matrixBuffer, ValueLayout.JAVA_FLOAT, 0, 16)
+
+    // 3. Send straight to the GPU
+    gl.uniformMatrix4fv(location, 1, 0.toByte, matrixBuffer)
+  }
+
+  // --- 4. PRIVATE COMPILATION LOGIC (INTERNAL) ---
 
   private def compileProgram(): Int = {
     val vs = compileShader(GL_VERTEX_SHADER, vertexSource)
     val fs = compileShader(GL_FRAGMENT_SHADER, fragmentSource)
+    
     val program: Int = gl.createProgram()
     gl.attachShader(program, vs)
     gl.attachShader(program, fs)
     gl.linkProgram(program)
+    
+    // Clean up intermediate shader objects after linking
+    gl.deleteShader(vs)
+    gl.deleteShader(fs)
+    
     program
   }
 
   private def compileShader(shaderType: Int, source: String): Int = {
     val shader: Int = gl.createShader(shaderType)
-    val sourceBytes = source.getBytes(StandardCharsets.UTF_8)
-    val sourceSeg = arena.allocate(sourceBytes.length + 1)
-    MemorySegment.copy(sourceBytes, 0, sourceSeg, ValueLayout.JAVA_BYTE, 0, sourceBytes.length)
-    sourceSeg.set(ValueLayout.JAVA_BYTE, sourceBytes.length, 0.toByte)
+    
+    // Simplification: allocateFrom automatically adds the null-terminator byte!
+    val sourceSeg = arena.allocateFrom(source)
 
+    // Set up the pointer-to-pointer array required by glShaderSource
     val pointerArray = arena.allocate(ValueLayout.ADDRESS)
-
     pointerArray.set(ValueLayout.ADDRESS, 0, sourceSeg)
 
     gl.shaderSource(shader, 1, pointerArray, MemorySegment.NULL)

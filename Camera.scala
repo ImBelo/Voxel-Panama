@@ -14,11 +14,22 @@ class Camera {
   var pitch: Float = 0.0f   // Up/Down angle
 
   // Generates the final matrix representing the camera's transformation of the world
-  def getViewMatrix: Matrix4f = {
-    val target = new Vector3f()
-    position.add(forward, target) // Target point is (position + forward vector)
-    
-    new Matrix4f().lookAt(position, target, up)
+  private val targetTmp = new org.joml.Vector3f()
+
+  def getViewMatrix(dest: org.joml.Matrix4f): Unit = {
+    // Clear and update our pre-allocated target vector
+    position.add(forward, targetTmp) 
+
+    // Calculate the lookAt matrix directly into the destination matrix
+    dest.identity().lookAt(position, targetTmp, up)
+  }
+  def getProjectionMatrix(dest: org.joml.Matrix4f, aspectRatio: Float): Unit = {
+    val fov = Math.toRadians(60.0).toFloat // 60-degree Field of View
+    val nearPlane = 0.1f                  // Don't render things closer than this
+    val farPlane = 1000.0f                // Voxel render distance horizon
+
+    // Calculate perspective directly into the destination matrix
+    dest.identity().perspective(fov, aspectRatio, nearPlane, farPlane)
   }
 
   // Updates the forward vector based on mouse angles (Yaw and Pitch)

@@ -139,7 +139,7 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
   def createPrimaryWindow(title: MemorySegment): MemorySegment = {
     val monitorPtr = getPrimaryMonitor()
 
-    val windowPtr = createWindow(1920,1080,title, monitorPtr, MemorySegment.NULL)
+    val windowPtr = createWindow(1366,768,title, monitorPtr, MemorySegment.NULL)
 
     if (windowPtr == MemorySegment.NULL) {
       throw new RuntimeException("Failed to create fullscreen GLFW window")
