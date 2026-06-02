@@ -7,6 +7,8 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 import MemoryUtils.withArena
 import ArenaType.*
+import CubeGeometry.*
+
 
 object Window {
 
@@ -124,61 +126,13 @@ object Window {
       // COlors the sky blue
       gl.clearColor(0.2f, 0.4f, 0.6f, 1.0f) 
 
-      //val shader = new Shader(gl)
-      // NEW:
       import ShaderProgram.given
-      val shader = ShaderBuilder.build(gl, ShaderSources(vertexSource, fragmentSource))(using arena)
-
+      val shader = ShaderBuilder.build(gl, ShaderSources(vertexSource, fragmentSource))
       // --- UPGRADED CUBE DATA ARRAYS (24 Vertices) ---
       // Structure: X, Y, Z,   NX, NY, NZ
-      val vertices = Array[Float](
-        // --- FRONT FACE (Normal: 0, 0, 1) ---
-      -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 0: Bottom-Left
-      0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 1: Bottom-Right
-      0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 2: Top-Right
-      -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 3: Top-Left
-
-      // --- BACK FACE (Normal: 0, 0, -1) ---
-      -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 4: Bottom-Left
-      0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 5: Bottom-Right
-      0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 6: Top-Right
-      -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 7: Top-Left
-
-      // --- TOP FACE (Normal: 0, 1, 0) ---
-      -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 8: Front-Left
-      0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 9: Front-Right
-      0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 10: Back-Right
-      -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 11: Back-Left
-
-      // --- BOTTOM FACE (Normal: 0, -1, 0) ---
-      -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 12: Front-Left
-      0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 13: Front-Right
-      0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 14: Back-Right
-      -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 15: Back-Left
-
-      // --- RIGHT FACE (Normal: 1, 0, 0) ---
-      0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 16: Bottom-Front
-      0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 17: Bottom-Back
-      0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 18: Top-Back
-      0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 19: Top-Front
-
-      // --- LEFT FACE (Normal: -1, 0, 0) ---
-      -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 20: Bottom-Front
-      -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 21: Bottom-Back
-      -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 22: Top-Back
-      -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f  // 23: Top-Front
-    )
-
+      val vertices = CubeGeometry.vertices
       // --- UPGRADED INDEX ARRAY (Mapping the 24 Vertices into Triangles) ---
-      val indices = Array[Int](
-        0, 1, 2,   2, 3, 0,   // Front
-        4, 5, 6,   6, 7, 4,   // Back
-        8, 9, 10,  10, 11, 8,  // Top
-        12, 13, 14, 14, 15, 12, // Bottom
-        16, 17, 18, 18, 19, 16, // Right
-        20, 21, 22, 22, 23, 20  // Left
-      )
-     
+      val indices = CubeGeometry.indices     
       // Mesh now only needs our clean unified 'gl' command manager
       val cubeMesh = new Mesh(vertices, indices, gl)
 
@@ -188,66 +142,50 @@ object Window {
       val viewMatrix       = new Matrix4f()
       val projectionMatrix = new Matrix4f()
       // --- RENDER LOOP ---
-      var shouldClose = false
       var lastTime = System.nanoTime()
-      while (!shouldClose) {
-        // 1. The top-level zone tracking the cumulative execution time of the entire frame
-        val currentTime = System.nanoTime()
-        val deltaTime = ((currentTime - lastTime) / 1_000_000_000.0).toFloat
-        lastTime = currentTime // Update for the next frame
-        EngineProfiler.zone("Total Frame") {
-
-          // --- STAGE 1: INPUT PROCESSING ---
-          EngineProfiler.zone("Input Processing") {
-            // Use our abstract glfw handler to process inputs
-            inputHandler.update(deltaTime)
-          }
-
-          // --- STAGE 2: CAMERA & MATRIX CALCULATIONS ---
-          EngineProfiler.zone("Math & Uniform Updates") {
-
-            // Clear screen via clean API call
+      @annotation.tailrec
+      def renderLoop(): Unit = {
+        glfw.pollEvents()
+        if !window.shouldClose() then {
+          // 1. The top-level zone tracking the cumulative execution time of the entire frame
+          val currentTime = System.nanoTime()
+          val deltaTime = ((currentTime - lastTime) / 1_000_000_000.0).toFloat
+          lastTime = currentTime // Update for the next frame
+          EngineProfiler.zone("Total Frame") {
+            EngineProfiler.zone("Input Processing") {
+              inputHandler.update(deltaTime)
+            }
             EngineProfiler.zone("GPU clear") {
               gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             }
+            EngineProfiler.zone("Math & Uniform Updates") {
+              shader.use()
+              camera.getViewMatrix(viewMatrix)
+              camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
+              modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
+              shader.set("u_ObjectColor", (0.8f, 0.2f, 0.2f))  // Green base color
+              shader.set("u_LightPos",    (5.0f, 10.0f, 5.0f))  // Sun position
+              shader.set("u_LightColor",  (1.0f, 1.0f, 0.95f))  // Warm sunlight
+              shader.set("u_Model",      modelMatrix)            // Model matrix
+              shader.set("u_View",       viewMatrix)             // View matrix
+              shader.set("u_Projection", projectionMatrix)       // Projection matrix
 
-            // Bind shader program BEFORE setting uniforms!
-
-            shader.use()
-
-            // Update Camera Transformations
-            gl.viewport(0, 0, width, height)
-            camera.getViewMatrix(viewMatrix)
-            camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
-            modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
-
-            shader.set("u_ObjectColor", (0.2f, 0.8f, 0.2f))  // Green base color
-            shader.set("u_LightPos",    (5.0f, 10.0f, 5.0f))  // Sun position
-            shader.set("u_LightColor",  (1.0f, 1.0f, 0.95f))  // Warm sunlight
-            shader.set("u_Model",      modelMatrix)            // Model matrix
-            shader.set("u_View",       viewMatrix)             // View matrix
-            shader.set("u_Projection", projectionMatrix)       // Projection matrix
-
+            }
+            EngineProfiler.zone("GPU Draw Dispatch") {
+              gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+              cubeMesh.draw()
+            }
+            EngineProfiler.zone("Frame Present & Poll") {
+              glfw.swapBuffers(window.handle)
+            }
+            if (glfw.windowShouldClose(window.handle) != 0) {
+              shouldClose = true
+            }
           }
-
-          // --- STAGE 3: GPU RENDER DISPATCH ---
-          EngineProfiler.zone("GPU Draw Dispatch") {
-            gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            cubeMesh.draw()
-          }
-
-          // --- STAGE 4: FRAME PRESENTATION & OS POLLING ---
-          EngineProfiler.zone("Frame Present & Poll") {
-            glfw.swapBuffers(window.handle)
-            glfw.pollEvents()
-          }
-
-          // Check if window should exit
-          if (glfw.windowShouldClose(window.handle) != 0) {
-            shouldClose = true
-          }
+          renderLoop()
         }
       }
+      renderLoop()
       glfw.terminate()
     }
 

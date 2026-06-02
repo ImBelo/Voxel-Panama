@@ -6,7 +6,6 @@ import org.joml.Vector3f
 class Camera {
   val position = new Vector3f(0.0f, 0.0f, 3.0f) // Start 3 units back from center
   val forward  = new Vector3f(0.0f, 0.0f, -1.0f)
-
   val up       = new Vector3f(0.0f, 1.0f, 0.0f)
 
 
