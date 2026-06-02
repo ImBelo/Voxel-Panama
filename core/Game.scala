@@ -8,22 +8,13 @@ import org.joml.Vector3f
 import MemoryUtils.withArena
 import ArenaType.*
 import CubeGeometry.*
+import GLCostants.*
+import GlfwCostants.*
+import MemoryUtils.* 
 
 
-object Window {
-
+object Game {
   // OpenGL Constants needed for drawing
-  private val GL_COLOR_BUFFER_BIT = 0x00004000
-  private val GL_DEPTH_BUFFER_BIT = 0x00000100
-  private val GL_DEPTH_TEST       = 0x00000B71
-  private val GL_TRIANGLES        = 0x00000004
-  private val GL_STATIC_DRAW      = 0x000088E4
-  private val GL_ARRAY_BUFFER     = 0x00008892
-  private val GL_ELEMENT_ARRAY_BUFFER = 0x00008893
-  private val GL_FLOAT            = 0x00001406
-  private val GL_UNSIGNED_INT     = 0x00001405
-  private val GLFW_RAW_MOUSE_MOTION = 0x00033001  // GLFW 3.3+ constant
-  private val GLFW_TRUE = 1
 
   var firstMouse: Boolean = true
   var lastX: Double = 0.0
@@ -85,7 +76,6 @@ object Window {
 
   def start(width: Int, height: Int, title: String): Unit = {
     val linker = Linker.nativeLinker()
-
     // 1. Load GLFW (Windowing)
     System.load("/usr/lib/x86_64-linux-gnu/libglfw.so.3") 
 
@@ -98,27 +88,22 @@ object Window {
         // Fallback for some Linux distributions where the link points straight to libGL.so
         System.load("/usr/lib/libGL.so")
     }
-
-
     val lookup = SymbolLookup.loaderLookup()
 
     val glfw = new Glfw(lookup, linker)
     val gl   = new GL(lookup, linker)
 
-    // 1. Clean, highly readable engine setup sequence
     if (glfw.init() == 0) throw new RuntimeException("GLFW Init Failed")   
 
     withArena(Confined) { arena ?=> 
       val camera = new Camera()
-      val window = new GlfwWindow(width,height,glfw, "Meow")
-
+      val window = new GlfwWindow(width,height,glfw,title)
       val inputHandler = new InputHandler(glfw,window,camera,0.05)
-
       // Any drawing commands should go in window.handle pointer
       glfw.makeContextCurrent(window.handle)
-      glfw.setInputMode(window.handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
+      glfw.setInputMode(window.handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 
-      // THIS TURNS OFF VSYNC NEED TO 
+      // THIS TURNS OFF VSYNC NEED TO USE DELTA TIME FOR INPUTS
       glfw.swapInterval(0) 
       window.enableRawMouseMotion()
       // Enables 3D Occlusion
@@ -134,9 +119,8 @@ object Window {
       // --- UPGRADED INDEX ARRAY (Mapping the 24 Vertices into Triangles) ---
       val indices = CubeGeometry.indices     
       // Mesh now only needs our clean unified 'gl' command manager
-      val cubeMesh = new Mesh(vertices, indices, gl)
-
-
+      val cubeMesh = new CubeMesh(gl)
+      cubeMesh.build(vertices,indices)
       // For performance, pre-allocate your matrix math targets so you don't allocate objects inside the loop
       val modelMatrix      = new Matrix4f()
       val viewMatrix       = new Matrix4f()
@@ -163,7 +147,7 @@ object Window {
               camera.getViewMatrix(viewMatrix)
               camera.getProjectionMatrix(projectionMatrix, window.currentAspectRatio)
               modelMatrix.identity() // Reset model matrix to identity (0, 0, 0 center)
-              shader.set("u_ObjectColor", (0.8f, 0.2f, 0.2f))  // Green base color
+              shader.set("u_ObjectColor", (0.2f, 0.8f, 0.2f))  // Green base color
               shader.set("u_LightPos",    (5.0f, 10.0f, 5.0f))  // Sun position
               shader.set("u_LightColor",  (1.0f, 1.0f, 0.95f))  // Warm sunlight
               shader.set("u_Model",      modelMatrix)            // Model matrix
@@ -177,9 +161,6 @@ object Window {
             }
             EngineProfiler.zone("Frame Present & Poll") {
               glfw.swapBuffers(window.handle)
-            }
-            if (glfw.windowShouldClose(window.handle) != 0) {
-              shouldClose = true
             }
           }
           renderLoop()

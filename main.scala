@@ -1,6 +1,6 @@
-import Window.*
+import Game.*
 object PanamaGlfwWindow {
   def main(args: Array[String]): Unit = {
-    Window.start(1366,768,"Meow")
+    Game.start(1366,768,"Voxel")
   }
 }

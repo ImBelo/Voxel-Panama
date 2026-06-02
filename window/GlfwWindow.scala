@@ -1,4 +1,6 @@
 import java.lang.foreign.*
+import GlfwCostants.*
+import MemoryUtils.*
 
 class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena: Arena) {
   private val windowTitle = arena.allocateFrom(title) // helper to copy string + null terminator
@@ -13,10 +15,10 @@ class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena
 
   def enableRawMouseMotion(): Unit =
     if (glfw.rawMouseMotionSupported())
-      glfw.setInputMode(handle, glfw.GLFW_RAW_MOUSE_MOTION, glfw.GLFW_TRUE)
+      glfw.setInputMode(handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE)
 
   def disableCursor(): Unit =
-    glfw.setInputMode(handle, glfw.GLFW_CURSOR, glfw.GLFW_CURSOR_DISABLED)
+    glfw.setInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 
   def framebufferSize(outWidth: MemorySegment, outHeight: MemorySegment): (Float, Float) = {
     glfw.getFramebufferSize(handle, outWidth, outHeight)

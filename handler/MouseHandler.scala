@@ -5,18 +5,13 @@ import scala.compiletime.uninitialized
 class MouseHandler(camera: Camera, sensitivity: Float = 0.5f) {
   private var glfw: Glfw = uninitialized
   private var window: MemorySegment = uninitialized
-  private val persistentArena = Arena.ofConfined() // or however you create it
   private var cursorXPtr: MemorySegment = uninitialized
   private var cursorYPtr: MemorySegment = uninitialized
   private var windowWidth: Int = uninitialized
   private var windowHeight: Int = uninitialized
   private var deadZone: Int = 10
   private var initialized = false
-
-  
   // Constants - add these if not in your Glfw object
-  private final val GLFW_CURSOR = 0x00033001
-  private final val GLFW_CURSOR_HIDDEN = 0x00034002
   
   def register(window: MemorySegment, glfw: Glfw, arena: Arena): Unit = {
     initialized = true
@@ -24,13 +19,11 @@ class MouseHandler(camera: Camera, sensitivity: Float = 0.5f) {
     this.window = window
     
     // Allocate
-    cursorXPtr = persistentArena.allocate(ValueLayout.JAVA_DOUBLE)
-    cursorYPtr = persistentArena.allocate(ValueLayout.JAVA_DOUBLE)
+    cursorXPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
+    cursorYPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
     val widthPtr = arena.allocate(ValueLayout.JAVA_INT)
     val heightPtr = arena.allocate(ValueLayout.JAVA_INT)
 
-
-    
     glfw.getFramebufferSize(window, widthPtr, heightPtr)
     windowWidth = widthPtr.get(ValueLayout.JAVA_INT, 0)
     windowHeight = heightPtr.get(ValueLayout.JAVA_INT, 0)
@@ -86,8 +79,5 @@ class MouseHandler(camera: Camera, sensitivity: Float = 0.5f) {
     glfw.setCursorPos(window, centerX, centerY)
   }
 
-  def cleanup(): Unit = {
-    persistentArena.close()  // Don't forget to close!
-  }
 
 }

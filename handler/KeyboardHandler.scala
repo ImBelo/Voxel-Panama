@@ -5,6 +5,8 @@ import org.joml.Vector3f
 import MemoryUtils.withArena
 import ArenaType.*
 
+import GlfwCostants.*
+import GLCostants.*
 
 
 import org.joml.Vector3f
@@ -28,25 +30,25 @@ class KeyboardHandler(glfw: Glfw, window: GlfwWindow, camera: Camera) {
     val frameSpeed = unitsPerSecond * deltaTime
 
     // 2. USE CONSTANTS INSTEAD OF MAGIC NUMBERS (256 = GLFW_KEY_ESCAPE)
-    if (glfw.getKey(windowHandle, glfw.GLFW_KEY_ESCAPE) == glfw.GLFW_PRESS) { 
+    if (glfw.getKey(windowHandle, GLFW_KEY_ESCAPE) == GLFW_PRESS) { 
       EngineProfiler.printMetrics()
       glfw.setWindowShouldClose(windowHandle, 1) 
     }
 
     // --- VERTICAL MOVEMENT ---
-    if (glfw.getKey(windowHandle, glfw.GLFW_KEY_SPACE) == glfw.GLFW_PRESS) {
+    if (glfw.getKey(windowHandle, GLFW_KEY_SPACE) == GLFW_PRESS) {
       camera.position.y += frameSpeed
     }
-    if (glfw.getKey(windowHandle, glfw.GLFW_KEY_LEFT_SHIFT) == glfw.GLFW_PRESS) {
+    if (glfw.getKey(windowHandle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       camera.position.y -= frameSpeed
     }
 
     // --- HORIZONTAL MOVEMENT ---
     // 3. CACHE KEY STATES FIRST
-    val wPressed = glfw.getKey(windowHandle, glfw.GLFW_KEY_W) == glfw.GLFW_PRESS
-    val sPressed = glfw.getKey(windowHandle, glfw.GLFW_KEY_S) == glfw.GLFW_PRESS
-    val aPressed = glfw.getKey(windowHandle, glfw.GLFW_KEY_A) == glfw.GLFW_PRESS
-    val dPressed = glfw.getKey(windowHandle, glfw.GLFW_KEY_D) == glfw.GLFW_PRESS
+    val wPressed = glfw.getKey(windowHandle, GLFW_KEY_W) == GLFW_PRESS
+    val sPressed = glfw.getKey(windowHandle, GLFW_KEY_S) == GLFW_PRESS
+    val aPressed = glfw.getKey(windowHandle, GLFW_KEY_A) == GLFW_PRESS
+    val dPressed = glfw.getKey(windowHandle, GLFW_KEY_D) == GLFW_PRESS
 
     // 4. CONDITIONAL MATH
     // Only calculate vectors if the player is actually trying to move!

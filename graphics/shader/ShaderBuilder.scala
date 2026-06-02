@@ -1,9 +1,10 @@
 import java.lang.foreign.*
+import GLCostants.*
 object ShaderBuilder:
   inline def build(gl: GL, sources: ShaderSources)(using arena: Arena): ShaderProgram =
     val compiler = new ShaderStage(gl)
-    val vs = compiler.compile(sources.vertex, gl.GL_VERTEX_SHADER)
-    val fs = compiler.compile(sources.fragment, gl.GL_FRAGMENT_SHADER)
+    val vs = compiler.compile(sources.vertex, GL_VERTEX_SHADER)
+    val fs = compiler.compile(sources.fragment, GL_FRAGMENT_SHADER)
 
     val progId = gl.createProgram()
     gl.attachShader(progId, vs.toInt)

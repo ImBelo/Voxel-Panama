@@ -13,29 +13,6 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
   private val glfwPollEvents_H = linker.downcallHandle(lookup.find("glfwPollEvents").get(), FunctionDescriptor.ofVoid())
   private val glfwTerminate_H = linker.downcallHandle(lookup.find("glfwTerminate").get(), FunctionDescriptor.ofVoid())
   private val glfwGetKey_H = linker.downcallHandle(lookup.find("glfwGetKey").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
-  val GLFW_CURSOR = 0x00033001
-  val GLFW_CURSOR_NORMAL = 0x00034001
-  val GLFW_CURSOR_DISABLED = 0x00034003
-  val GLFW_CURSOR_HIDDEN = 0x00034002 // Add this line
-  val GLFW_TRUE = 1
-  val GLFW_RAW_MOUSE_MOTION = 0x00033005
-  val GLFW_CURSOR_ARROW = 0x00036001 // Standard arrow shape constant if needed
-
-  val GLFW_KEY_W: Int             = 87
-  val GLFW_KEY_A: Int             = 65
-  val GLFW_KEY_S: Int             = 83
-  val GLFW_KEY_D: Int             = 68
-
-  // --- Action Keys ---
-  val GLFW_KEY_SPACE: Int         = 32
-  val GLFW_KEY_LEFT_SHIFT: Int    = 340
-  val GLFW_KEY_LEFT_CONTROL: Int  = 341
-  val GLFW_KEY_ESCAPE: Int        = 256
-  val GLFW_KEY_ENTER: Int         = 257
-
-  val GLFW_RELEASE: Int  = 0
-  val GLFW_PRESS: Int    = 1
-  val GLFW_REPEAT: Int   = 2
 
   private val glfwGetPrimaryMonitor_H = linker.downcallHandle(
   lookup.find("glfwGetPrimaryMonitor").get(),

@@ -6,8 +6,7 @@ import javax.xml.validation.SchemaFactoryLoader
 
 class GL(lookup: SymbolLookup, linker: Linker) {
 
-  val GL_VERTEX_SHADER   = 0x8B31
-  val GL_FRAGMENT_SHADER = 0x8B30
+
 
 
   private val glCreateShader_H = linker.downcallHandle(
