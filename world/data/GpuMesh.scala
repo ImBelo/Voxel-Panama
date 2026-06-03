@@ -1,6 +1,6 @@
 import java.lang.foreign.{Arena, ValueLayout}
 
-class CubeMesh(gl: GL)(using arena: Arena) {
+class GpuMesh(gl: GL)(using arena: Arena) {
 
   // 1. ZERO-COST CONSTANTS
   // Using `inline val` tells the compiler to physically paste the literal numbers 
@@ -15,7 +15,7 @@ class CubeMesh(gl: GL)(using arena: Arena) {
 
   // Pre-calculated byte offsets (Disappears completely at compile time)
   private inline val FLOAT_BYTES   = 4L
-  private inline val VERTEX_STRIDE = 6 * FLOAT_BYTES.toInt
+  private inline val VERTEX_STRIDE = 8 * FLOAT_BYTES.toInt
   private inline val NORMAL_OFFSET = 3L * FLOAT_BYTES
 
   private var indexCount: Int = 0
@@ -52,21 +52,52 @@ class CubeMesh(gl: GL)(using arena: Arena) {
     gl.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboId)
     gl.bufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * FLOAT_BYTES, nativeIndices, GL_STATIC_DRAW)
 
-    // Setup Attributes (Position)
-    gl.vertexAttribPointer(0, 3, GL_FLOAT, 0.toByte, VERTEX_STRIDE, 0L)
+    // Position (Attrib 0)
+    gl.vertexAttribPointer(0, 3, GL_FLOAT, 0.toByte, 8 * 4, 0L)
     gl.enableVertexAttribArray(0)
 
-    // Setup Attributes (Normal)
-    gl.vertexAttribPointer(1, 3, GL_FLOAT, 0.toByte, VERTEX_STRIDE, NORMAL_OFFSET)
+    // Normal (Attrib 1)
+    gl.vertexAttribPointer(1, 3, GL_FLOAT, 0.toByte, 8 * 4, 3L * 4)
     gl.enableVertexAttribArray(1)
 
-    // Unbind VAO safely at initialization time
+    // UV Texture Coordinate (Attrib 2) - DONT FORGET THIS!
+    gl.vertexAttribPointer(2, 2, GL_FLOAT, 0.toByte, 8 * 4, 6L * 4)
+    gl.enableVertexAttribArray(2)    // Unbind VAO safely at initialization time
+
     gl.bindVertexArray(0)
   }
 
   // 4. THE HOT LOOP RENDER CALL
   // Using `inline` forces the Scala compiler to paste these two lines 
   // directly into your render loop, bypassing the method call stack entirely!
+  def cleanup(): Unit = {
+    // 1. Unbind the VAO for safety before deleting
+    gl.bindVertexArray(0)
+
+    // 2. Delete the VBO
+    if (vboId != 0) {
+      // Allocate 4 bytes of native memory for 1 integer
+      val vboSegment = arena.allocate(java.lang.Integer.BYTES)
+      // Write the vboId into the native segment
+      vboSegment.set(java.lang.foreign.ValueLayout.JAVA_INT, 0, vboId)
+      // Pass count (1) and the pointer segment
+      gl.deleteBuffers(1, vboSegment)
+    }
+
+    // 3. Delete the EBO
+    if (eboId != 0) {
+      val eboSegment = arena.allocate(java.lang.Integer.BYTES)
+      eboSegment.set(java.lang.foreign.ValueLayout.JAVA_INT, 0, eboId)
+      gl.deleteBuffers(1, eboSegment)
+    }
+
+    // 4. Delete the VAO
+    if (vaoId != 0) {
+      val vaoSegment = arena.allocate(java.lang.Integer.BYTES)
+      vaoSegment.set(java.lang.foreign.ValueLayout.JAVA_INT, 0, vaoId)
+      gl.deleteVertexArrays(1, vaoSegment)
+    }
+  }
   inline def draw(): Unit = {
     gl.bindVertexArray(vaoId)
     gl.drawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0L)

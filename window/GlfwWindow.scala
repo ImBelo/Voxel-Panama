@@ -17,6 +17,9 @@ class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena
     if (glfw.rawMouseMotionSupported())
       glfw.setInputMode(handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE)
 
+  def turnOffVSync(): Unit =
+    glfw.swapInterval(0)
+
   def disableCursor(): Unit =
     glfw.setInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 

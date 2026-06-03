@@ -30,9 +30,13 @@ class ShaderProgram(private val gl: GL, val id: ProgramId)(using arena: Arena){
       }
     })
 
-  /** Zero-cost uniform setter – inlined to direct GL calls */
+  /** Zero-cost uniform setter – inlined to direct GL calls DONT USE THIS IN LOOP BECAUSE MAP OVERHEAD */
   inline def set[U](name: String, value: U)(using u: Uniform[U]): Unit =
     value.set(this, getUniformLocation(name))
+
+  /** Zero-cost: Use this in loops */
+  inline def set[U](location: Int, value: U)(using u: Uniform[U]): Unit =
+    value.set(this, location)
 }
 
 object ShaderProgram{

@@ -96,6 +96,20 @@ class GL(lookup: SymbolLookup, linker: Linker) {
       ValueLayout.JAVA_FLOAT // v0: The float value to pass to the shader
     )
   )
+  private val glDeleteBuffersHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glDeleteBuffers").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+  )
+
+  private val glDeleteVertexArraysHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glDeleteVertexArrays").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+  )
+  def deleteBuffers(n: Int, buffers: MemorySegment): Unit =
+    glDeleteBuffersHandle.invoke(n, buffers)
+
+  def deleteVertexArrays(n: Int, arrays: MemorySegment): Unit =
+    glDeleteVertexArraysHandle.invoke(n, arrays)
   def uniform1f(location: Int, value: Float): Unit = {
     glUniform1fHandle.invokeExact(location, value)
   }
