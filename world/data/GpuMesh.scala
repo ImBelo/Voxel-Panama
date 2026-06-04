@@ -1,4 +1,4 @@
-import java.lang.foreign.{Arena, ValueLayout}
+import java.lang.foreign.{Arena, ValueLayout,MemorySegment}
 
 class GpuMesh(gl: GL)(using arena: Arena) {
 
@@ -33,39 +33,35 @@ class GpuMesh(gl: GL)(using arena: Arena) {
   
   val vboId: Int = _bufferPtr.getAtIndex(ValueLayout.JAVA_INT, 0)
   val eboId: Int = _bufferPtr.getAtIndex(ValueLayout.JAVA_INT, 1)
+  private inline def FLOAT_SIZE = 4
+  private inline def STRIDE = 8 * FLOAT_SIZE
 
   // 3. MESH BUILDER
   def build(vertices: Array[Float], indices: Array[Int]): Unit = {
     indexCount = indices.length
     
     // Bulk memcpy to native memory (Zero-overhead transfer)
-    val nativeVertices = BufferUtils.toNative(vertices, arena)
-    val nativeIndices  = BufferUtils.toNative(indices, arena)
+    val nativeVertices = MemoryUtils.toNative(vertices, arena)
+    val nativeIndices  = MemoryUtils.toNative(indices, arena)
 
     gl.bindVertexArray(vaoId)
 
-    // Upload Vertices
-    gl.bindBuffer(GL_ARRAY_BUFFER, vboId)
-    gl.bufferData(GL_ARRAY_BUFFER, vertices.length * FLOAT_BYTES, nativeVertices, GL_STATIC_DRAW)
+    upload(GL_ARRAY_BUFFER, vboId, nativeVertices, vertices.length * FLOAT_SIZE)
+    upload(GL_ELEMENT_ARRAY_BUFFER, eboId, nativeIndices, indices.length * FLOAT_SIZE)
 
-    // Upload Indices
-    gl.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboId)
-    gl.bufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * FLOAT_BYTES, nativeIndices, GL_STATIC_DRAW)
-
-    // Position (Attrib 0)
-    gl.vertexAttribPointer(0, 3, GL_FLOAT, 0.toByte, 8 * 4, 0L)
-    gl.enableVertexAttribArray(0)
-
-    // Normal (Attrib 1)
-    gl.vertexAttribPointer(1, 3, GL_FLOAT, 0.toByte, 8 * 4, 3L * 4)
-    gl.enableVertexAttribArray(1)
-
-    // UV Texture Coordinate (Attrib 2) - DONT FORGET THIS!
-    gl.vertexAttribPointer(2, 2, GL_FLOAT, 0.toByte, 8 * 4, 6L * 4)
-    gl.enableVertexAttribArray(2)    // Unbind VAO safely at initialization time
+    setupAttrib(0, 3, 0)
+    setupAttrib(1, 3, 3 * FLOAT_SIZE)
+    setupAttrib(2, 2, 6 * FLOAT_SIZE)
 
     gl.bindVertexArray(0)
   }
+  private inline def upload(target: Int, id: Int, data: MemorySegment, size: Long): Unit =
+      gl.bindBuffer(target, id)
+      gl.bufferData(target, size, data, GL_STATIC_DRAW)
+
+  private inline def setupAttrib(index: Int, size: Int, offset: Int): Unit =
+    gl.vertexAttribPointer(index, size, GL_FLOAT, 0.toByte, STRIDE, offset.toLong)
+    gl.enableVertexAttribArray(index)
 
   // 4. THE HOT LOOP RENDER CALL
   // Using `inline` forces the Scala compiler to paste these two lines 

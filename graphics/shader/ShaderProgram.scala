@@ -1,4 +1,5 @@
 import MemoryUtils.withArena
+import MemoryUtils.*
 import java.lang.foreign.{Arena, MemorySegment, ValueLayout}
 import org.joml.Matrix4f
 import scala.collection.mutable
@@ -24,8 +25,8 @@ class ShaderProgram(private val gl: GL, val id: ProgramId)(using arena: Arena){
 
   def getUniformLocation(name: String): Int =
     uniformLocations.getOrElseUpdate(name, {
-      withArena(ArenaType.Confined) { local ?=>
-        val seg = local.allocateFrom(name)
+      withArena(ArenaType.Confined) { arena ?=>
+        val seg = arena.allocString(name)
         gl.getUniformLocation(id.toInt, seg)
       }
     })

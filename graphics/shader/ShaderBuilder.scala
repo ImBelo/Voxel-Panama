@@ -15,3 +15,4 @@ object ShaderBuilder:
     gl.deleteShader(fs.toInt)
 
     ShaderProgram(gl, ProgramId(progId))
+

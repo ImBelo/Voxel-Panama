@@ -67,7 +67,7 @@ object Game {
         val camera = new Camera()
         val window = new GlfwWindow(width, height, glfw, title)
         val inputHandler = new InputHandler(glfw, window, camera, 0.05)
-        val chunkRenderer = new ChunkRenderer(using arena, gl)
+        val chunkRenderer = new ChunkRenderer(gl)
 
         window.makeContextCurrent()
         window.disableCursor()
