@@ -1,83 +1,49 @@
-import java.lang.foreign.{MemorySegment, Arena, ValueLayout}
-import scala.compiletime.uninitialized
+import java.lang.foreign.ValueLayout
 
+class MouseHandler(window: GlfwWindow, player: Player, sensitivity: Float = 0.05f) {
+  private val arena = java.lang.foreign.Arena.ofAuto()
+  private val cursorXPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
+  private val cursorYPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
 
-class MouseHandler(camera: Camera, sensitivity: Float = 0.5f) {
-  private var glfw: Glfw = uninitialized
-  private var window: MemorySegment = uninitialized
-  private var cursorXPtr: MemorySegment = uninitialized
-  private var cursorYPtr: MemorySegment = uninitialized
-  private var windowWidth: Int = uninitialized
-  private var windowHeight: Int = uninitialized
-  private var deadZone: Int = 10
-  private var initialized = false
-  // Constants - add these if not in your Glfw object
-  
-  def register(window: MemorySegment, glfw: Glfw, arena: Arena): Unit = {
-    initialized = true
-    this.glfw = glfw
-    this.window = window
-    
-    // Allocate
-    cursorXPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
-    cursorYPtr = arena.allocate(ValueLayout.JAVA_DOUBLE)
-    val widthPtr = arena.allocate(ValueLayout.JAVA_INT)
-    val heightPtr = arena.allocate(ValueLayout.JAVA_INT)
+  private val deadZone: Int = 10
 
-    glfw.getFramebufferSize(window, widthPtr, heightPtr)
-    windowWidth = widthPtr.get(ValueLayout.JAVA_INT, 0)
-    windowHeight = heightPtr.get(ValueLayout.JAVA_INT, 0)
-    
-    glfw.setCursorPos(window, windowWidth / 2.0, windowHeight / 2.0)
-  }
-  
-  // Call this every frame in your game loop
-  def update(arena: Arena): Unit = {
-    if (!initialized) return
-    glfw.getCursorPos(window, cursorXPtr, cursorYPtr)
+  // 1. Initialize immediately! No more fragile 'register' boilerplate or 'uninitialized' vars
+  private val centerX = window.getWidth * 0.5
+  private val centerY = window.getHeight * 0.5
+  window.setCursorPosition(centerX, centerY)
+
+  def update(): Unit = {
+    // 2. Safely populate our local pointers via the clean window abstraction
+    window.getCursorPosition(cursorXPtr, cursorYPtr)
     
     val mouseX = cursorXPtr.get(ValueLayout.JAVA_DOUBLE, 0)
     val mouseY = cursorYPtr.get(ValueLayout.JAVA_DOUBLE, 0)
     
-    val centerX = windowWidth / 2.0
-    val centerY = windowHeight / 2.0
-    
-    // Check X axis (left/right)
+    var changed = false
+
+    // Check X axis (Left / Right turning)
     if (mouseX < centerX - deadZone) {
-      val distance = (centerX - mouseX).toFloat
-      val turnAmount = distance * sensitivity
-      camera.yaw -= turnAmount
-      camera.updateDirection()
-    }
-    else if (mouseX > centerX + deadZone) {
-
-      val distance = (mouseX - centerX).toFloat
-      val turnAmount = distance * sensitivity
-      camera.yaw += turnAmount
-      camera.updateDirection()
-
-    }
-    // Check Y axis (up/down)
-    if (mouseY < centerY - deadZone) {
-      val distance = (centerY - mouseY).toFloat
-      val pitchAmount = distance * sensitivity
-      camera.pitch += pitchAmount
-      if (camera.pitch > 89f) camera.pitch = 89f
-      if (camera.pitch < -89f) camera.pitch = -89f
-      camera.updateDirection()
-    }
-    else if (mouseY > centerY + deadZone) {
-      val distance = (mouseY - centerY).toFloat
-      val pitchAmount = distance * sensitivity
-      camera.pitch -= pitchAmount
-      if (camera.pitch > 89f) camera.pitch = 89f
-      if (camera.pitch < -89f) camera.pitch = -89f
-      camera.updateDirection()
+      player.transform.yaw -= (centerX - mouseX).toFloat * sensitivity
+      changed = true
+    } else if (mouseX > centerX + deadZone) {
+      player.transform.yaw += (mouseX - centerX).toFloat * sensitivity
+      changed = true
     }
     
-    // Always warp cursor back to center
-    glfw.setCursorPos(window, centerX, centerY)
+    // Check Y axis (Up / Down looking)
+    if (mouseY < centerY - deadZone) {
+      player.transform.pitch += (centerY - mouseY).toFloat * sensitivity
+      changed = true
+    } else if (mouseY > centerY + deadZone) {
+      player.transform.pitch -= (mouseY - centerY).toFloat * sensitivity
+      changed = true
+    }
+    
+    if (changed) {
+      player.updateDirection()
+    }
+    
+    // Always warp cursor back to center to avoid hitting OS screen boundaries
+    window.setCursorPosition(centerX, centerY)
   }
-
-
 }

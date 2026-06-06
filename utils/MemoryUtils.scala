@@ -20,32 +20,32 @@ object MemoryUtils {
         f(using arena)
     }
   }
-  extension (arena: Arena) {
-    inline def malloc(bytes: Long): MemorySegment = 
-      arena.allocate(bytes)
-    inline def calloc(bytes: Long, alignment: Long): MemorySegment =
-      arena.allocate(bytes, alignment)  
-    inline def allocString(str: String): MemorySegment =
-      arena.allocateFrom(str, StandardCharsets.UTF_8)
-    inline def allocFloats(inline values: Float*): MemorySegment = {
-      val seg = arena.allocate(ValueLayout.JAVA_FLOAT, values.length)
-      for (i <- values.indices) {
-        seg.setAtIndex(ValueLayout.JAVA_FLOAT, i, values(i))
-      }
-      seg
+  inline def malloc(bytes: Long)(using arena: Arena): MemorySegment = 
+    arena.allocate(bytes)
+  inline def malloc(layout: java.lang.foreign.MemoryLayout)(using arena: Arena): MemorySegment = 
+    arena.allocate(layout.byteSize())
+  inline def calloc(bytes: Long, alignment: Long)(using arena: Arena): MemorySegment =
+    arena.allocate(bytes, alignment)  
+  inline def allocString(str: String)(using arena: Arena): MemorySegment =
+    arena.allocateFrom(str, StandardCharsets.UTF_8)
+  inline def allocFloats(inline values: Float*)(using arena: Arena): MemorySegment = {
+    val seg = arena.allocate(ValueLayout.JAVA_FLOAT, values.length)
+    for (i <- values.indices) {
+      seg.setAtIndex(ValueLayout.JAVA_FLOAT, i, values(i))
     }
+    seg
+  }
 
-    inline def allocInts(inline values: Int*): MemorySegment = {
-      val seg = arena.allocate(ValueLayout.JAVA_INT, values.length)
-      for (i <- values.indices) {
-        seg.setAtIndex(ValueLayout.JAVA_INT, i, values(i))
-      }
-      seg
+  inline def allocInts(inline values: Int*)(using arena: Arena): MemorySegment = {
+    val seg = arena.allocate(ValueLayout.JAVA_INT, values.length)
+    for (i <- values.indices) {
+      seg.setAtIndex(ValueLayout.JAVA_INT, i, values(i))
     }
+    seg
+  }
   
     
-  }
-    inline def toNative(array: Array[Float], arena: Arena): MemorySegment = {
+    inline def toNative(array: Array[Float])(using arena: Arena): MemorySegment = {
       val seg = arena.allocate(ValueLayout.JAVA_FLOAT, array.length)
       MemorySegment.copy(array, 0, seg, ValueLayout.JAVA_FLOAT, 0, array.length)
       seg
@@ -53,7 +53,7 @@ object MemoryUtils {
     }
 
     /** Copies a Scala Int array into a freshly allocated segment */
-    inline def toNative(array: Array[Int], arena: Arena): MemorySegment = {
+    inline def toNative(array: Array[Int])(using arena: Arena): MemorySegment = {
       val seg = arena.allocate(ValueLayout.JAVA_INT, array.length)  // fixed: was JAVA_FLOAT
       MemorySegment.copy(array, 0, seg, ValueLayout.JAVA_INT, 0, array.length)
       seg

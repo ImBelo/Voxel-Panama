@@ -1,13 +1,13 @@
 import java.lang.foreign.*
+import java.lang.foreign.MemorySegment
 import Timing.DeltaTime
 
-class InputHandler(glfw: Glfw, window: GlfwWindow, camera: Camera, mouseSensitivity: Float = 0.05f)(using arena: Arena) {
-  val mouseHandler = new MouseHandler(camera, mouseSensitivity)
-  mouseHandler.register(window.handle, glfw, arena) 
-  val keyboardHandler = new KeyboardHandler(glfw,window,camera)
+class InputHandler(window: GlfwWindow, player: Player, mouseSensitivity: Float = 0.05f) {
+  val mouseHandler = new MouseHandler(window,player, mouseSensitivity)
+  val keyboardHandler = new KeyboardHandler(window, player)
 
   def update(deltaTime: DeltaTime): Unit = {
-    mouseHandler.update(arena)
+    mouseHandler.update()
     keyboardHandler.processInput(deltaTime)
   }
 }

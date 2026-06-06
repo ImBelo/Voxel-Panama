@@ -10,73 +10,71 @@ class GL(lookup: SymbolLookup, linker: Linker) {
   private final val glCreateShader_H: MethodHandle = linker.downcallHandle(
     lookup.find("glCreateShader").get(),
     FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT),
-    Linker.Option.critical(false) // 🔥 Modern replacement for isTrivial()
+    Linker.Option.critical(false) 
   )
 
-  // 2. Trivial state/setter functions should always use Linker.Option.isTrivial()
   private final val glShaderSource_H: MethodHandle = linker.downcallHandle(
     lookup.find("glShaderSource").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS),
-    Linker.Option.critical(false) // 🔥 Modern replacement for isTrivial()
+    Linker.Option.critical(false) 
 
   )
-
   private final val glCompileShader_H: MethodHandle = linker.downcallHandle(
     lookup.find("glCompileShader").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT),
-    Linker.Option.critical(false) // 🔥 Modern replacement for isTrivial()
+    Linker.Option.critical(false) 
   )
-  private final val glCreateProgram_H = linker.downcallHandle(
+  private val glCreateProgram_H = linker.downcallHandle(
     lookup.find("glCreateProgram").get(),
     FunctionDescriptor.of(ValueLayout.JAVA_INT))
-  private final val glAttachShader_H = linker.downcallHandle(
+  private val glAttachShader_H = linker.downcallHandle(
     lookup.find("glAttachShader").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private final val glLinkProgram_H = linker.downcallHandle(
+  private val glLinkProgram_H = linker.downcallHandle(
     lookup.find("glLinkProgram").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private final val glUseProgram_H = linker.downcallHandle(
+  private val glUseProgram_H = linker.downcallHandle(
     lookup.find("glUseProgram").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private final val glGetUniformLocation_H = linker.downcallHandle(
+  private val glGetUniformLocation_H = linker.downcallHandle(
     lookup.find("glGetUniformLocation").get(),
     FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
-  private final val glUniformMatrix4fv_H = linker.downcallHandle(
+  private val glUniformMatrix4fv_H = linker.downcallHandle(
     lookup.find("glUniformMatrix4fv").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.ADDRESS))
-  private final val glClearColor_H = linker.downcallHandle(
+  private val glClearColor_H = linker.downcallHandle(
     lookup.find("glClearColor").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT))
-  private final val glClear_H = linker.downcallHandle(
+  private val glClear_H = linker.downcallHandle(
     lookup.find("glClear").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private final val glEnable_H = linker.downcallHandle(
+  private val glEnable_H = linker.downcallHandle(
     lookup.find("glEnable").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private final val glGenBuffers_H = linker.downcallHandle(
+  private val glGenBuffers_H = linker.downcallHandle(
     lookup.find("glGenBuffers").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
-  private final val glBindBuffer_H = linker.downcallHandle(
+  private val glBindBuffer_H = linker.downcallHandle(
     lookup.find("glBindBuffer").get(), 
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private final val glBufferData_H = linker.downcallHandle(
+  private val glBufferData_H = linker.downcallHandle(
     lookup.find("glBufferData").get(), 
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
-  private final val glEnableVertexAttribArray_H = linker.downcallHandle(
+  private val glEnableVertexAttribArray_H = linker.downcallHandle(
     lookup.find("glEnableVertexAttribArray").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT))
-  private final val glVertexAttribPointer_H = linker.downcallHandle(
+  private val glVertexAttribPointer_H = linker.downcallHandle(
     lookup.find("glVertexAttribPointer").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT,
     ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_BYTE, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
-  private final val glDrawElements_H = linker.downcallHandle(
+  private val glDrawElements_H = linker.downcallHandle(
     lookup.find("glDrawElements").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG))
-  private final val glUniform3f_H: MethodHandle = linker.downcallHandle(
+  private val glUniform3f_H: MethodHandle = linker.downcallHandle(
     lookup.find("glUniform3f").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT)
   )
-  private final val glDeleteShader_H: MethodHandle = linker.downcallHandle(
+  private val glDeleteShader_H: MethodHandle = linker.downcallHandle(
     lookup.find("glDeleteShader").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
   )
@@ -84,11 +82,11 @@ class GL(lookup: SymbolLookup, linker: Linker) {
     lookup.find("glBindVertexArray").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
   )
-  private final val glGenVertexArraysHandle: MethodHandle = linker.downcallHandle(
+  private val glGenVertexArraysHandle: MethodHandle = linker.downcallHandle(
     lookup.find("glGenVertexArrays").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
   )
-  private final val glViewportHandle: MethodHandle = linker.downcallHandle(
+  private val glViewportHandle: MethodHandle = linker.downcallHandle(
     lookup.find("glViewport").get(),
     FunctionDescriptor.ofVoid(
       ValueLayout.JAVA_INT, // x
@@ -97,22 +95,79 @@ class GL(lookup: SymbolLookup, linker: Linker) {
       ValueLayout.JAVA_INT  // height
     )
   )
-  private final val glUniform1fHandle: MethodHandle = linker.downcallHandle(
+  private val glUniform1fHandle: MethodHandle = linker.downcallHandle(
     lookup.find("glUniform1f").get(),
     FunctionDescriptor.ofVoid(
       ValueLayout.JAVA_INT,  // location: The uniform variable's memory slot index
       ValueLayout.JAVA_FLOAT // v0: The float value to pass to the shader
     )
   )
-  private final val glDeleteBuffersHandle: MethodHandle = linker.downcallHandle(
+  private val glDeleteBuffersHandle: MethodHandle = linker.downcallHandle(
     lookup.find("glDeleteBuffers").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
   )
 
-  private final val glDeleteVertexArraysHandle: MethodHandle = linker.downcallHandle(
+  private val glDeleteVertexArraysHandle: MethodHandle = linker.downcallHandle(
     lookup.find("glDeleteVertexArrays").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
   )
+  private val glGenTexturesHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glGenTextures").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+  )
+
+  private val glBindTextureHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glBindTexture").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)
+  )
+
+  private val glTexImage2DHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glTexImage2D").get(),
+    FunctionDescriptor.ofVoid(
+      ValueLayout.JAVA_INT, // target
+      ValueLayout.JAVA_INT, // level
+      ValueLayout.JAVA_INT, // internalformat
+      ValueLayout.JAVA_INT, // width
+      ValueLayout.JAVA_INT, // height
+      ValueLayout.JAVA_INT, // border
+      ValueLayout.JAVA_INT, // format
+      ValueLayout.JAVA_INT, // type
+      ValueLayout.ADDRESS   // pixels
+    )
+  )
+
+  private val glTexParameteriHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glTexParameteri").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)
+  )
+  private val glActiveTextureHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glActiveTexture").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
+  )
+  private val glUniform1iHandle: MethodHandle = linker.downcallHandle(
+    lookup.find("glUniform1i").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)
+  )
+  def uniform1i(location: Int, value: Int): Unit =
+    glUniform1iHandle.invokeExact(location, value)
+  def activeTexture(texture: Int): Unit =
+    glActiveTextureHandle.invokeExact(texture)
+
+  def genTextures(n: Int, textures: MemorySegment): Unit =
+    glGenTexturesHandle.invokeExact(n, textures)
+
+  def bindTexture(target: Int, texture: Int): Unit =
+    glBindTextureHandle.invokeExact(target, texture)
+
+  def texImage2D(
+    target: Int, level: Int, internalformat: Int, 
+    width: Int, height: Int, border: Int, 
+    format: Int, `type`: Int, pixels: MemorySegment
+  ): Unit =
+    glTexImage2DHandle.invokeExact(target, level, internalformat, width, height, border, format, `type`, pixels)
+
+  def texParameteri(target: Int, pname: Int, param: Int): Unit =
+    glTexParameteriHandle.invokeExact(target, pname, param)
   def deleteBuffers(n: Int, buffers: MemorySegment): Unit =
     glDeleteBuffersHandle.invokeExact(n, buffers)
 

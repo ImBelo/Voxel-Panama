@@ -1,6 +1,6 @@
 // Chunk.scala
 class Chunk(val cx: Int, val cy: Int, val cz: Int):
-  val CHUNK_SIZE = 16
+  inline val CHUNK_SIZE = 16
   
   // 3D array of blocks
   private val blocks = Array.fill[Block](CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)(Block.Air)
@@ -22,6 +22,20 @@ class Chunk(val cx: Int, val cy: Int, val cz: Int):
   def isBlockSolid(x: Int, y: Int, z: Int): Boolean =
     getBlock(x, y, z).isSolid
   
+  def bakeFaceVertices(blockType: Int, x: Float, y: Float, z: Float): Array[Float] = {
+    val uOffset = (blockType % 4) * 0.25f
+    val vOffset = (blockType / 4) * 0.25f
+
+    // We add the block's 3D grid position (x, y, z) to the vertex coordinates 
+    // so the square is placed at the correct spot in the world!
+    Array(
+      // X + x,      Y + y,      Z + z,       U,                  V
+      0.0f + x,   0.0f + y,   0.0f + z,   0.00f + uOffset,   0.25f + vOffset, // Bottom Left
+      1.0f + x,   0.0f + y,   0.0f + z,   0.25f + uOffset,   0.25f + vOffset, // Bottom Right
+      1.0f + x,   1.0f + y,   0.0f + z,   0.25f + uOffset,   0.00f + vOffset, // Top Right
+      0.0f + x,   1.0f + y,   0.0f + z,   0.00f + uOffset,   0.00f + vOffset  // Top Left
+    )
+  }
   // Generate mesh only visible faces
   def generateMesh(getChunkNeighbor: (Int, Int, Int) => Chunk): ChunkMesh = {
     val verts= scala.collection.mutable.ArrayBuffer[Float]()
@@ -33,40 +47,41 @@ class Chunk(val cx: Int, val cy: Int, val cz: Int):
       y <- 0 until CHUNK_SIZE
       z <- 0 until CHUNK_SIZE
       }{
-        if blocks(x)(y)(z) != Block.Air then {
+        val block = blocks(x)(y)(x)
+        if block != Block.Air then {
           // --- FRONT FACE (+Z) ---
           if (isFaceVisible(x, y, z + 1, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Front, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Front, vertexCount,block.id)
             vertexCount += 4
           }
 
           // --- BACK FACE (-Z) ---
           if (isFaceVisible(x, y, z - 1, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Back, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Back, vertexCount,block.id)
             vertexCount += 4
           }
 
           // --- TOP FACE (+Y) ---
           if (isFaceVisible(x, y + 1, z, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Top, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Top, vertexCount,block.id)
             vertexCount += 4
           }
 
           // --- BOTTOM FACE (-Y) ---
           if (isFaceVisible(x, y - 1, z, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Bottom, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Bottom, vertexCount,block.id)
             vertexCount += 4
           }
 
           // --- RIGHT FACE (+X) ---
           if (isFaceVisible(x + 1, y, z, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Right, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Right, vertexCount,block.id)
             vertexCount += 4
           }
 
           // --- LEFT FACE (-X) ---
           if (isFaceVisible(x - 1, y, z, getChunkNeighbor)) {
-            addFace(verts, inds, x, y, z, Face.Left, vertexCount)
+            addFace(verts, inds, x, y, z, Face.Left, vertexCount,block.id)
             vertexCount += 4
           }
         }

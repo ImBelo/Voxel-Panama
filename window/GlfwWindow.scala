@@ -10,7 +10,6 @@ class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena
     glfw.terminate()
     throw new RuntimeException("Failed to create window")
   }
-
   def makeContextCurrent(): Unit = glfw.makeContextCurrent(handle)
 
   def enableRawMouseMotion(): Unit =
@@ -30,8 +29,34 @@ class GlfwWindow(width: Int, height: Int, glfw: Glfw, title: String)(using arena
     (w, h)
   }
 
+  def getWidth: Int = {
+    val wPtr = java.lang.foreign.Arena.ofAuto().allocate(ValueLayout.JAVA_INT)
+    val hPtr = java.lang.foreign.Arena.ofAuto().allocate(ValueLayout.JAVA_INT)
+    glfw.getFramebufferSize(handle, wPtr, hPtr)
+    wPtr.get(ValueLayout.JAVA_INT, 0)
+  }
+
+  def getHeight: Int = {
+    val wPtr = java.lang.foreign.Arena.ofAuto().allocate(ValueLayout.JAVA_INT)
+    val hPtr = java.lang.foreign.Arena.ofAuto().allocate(ValueLayout.JAVA_INT)
+    glfw.getFramebufferSize(handle, wPtr, hPtr)
+    hPtr.get(ValueLayout.JAVA_INT, 0)
+  }
+
+  // Encapsulate the raw pointer mutation inside the window class safely
+  def getCursorPosition(xOutPtr: MemorySegment, yOutPtr: MemorySegment): Unit = {
+    glfw.getCursorPos(handle, xOutPtr, yOutPtr)
+  }
+
+  def setCursorPosition(x: Double, y: Double): Unit = {
+    glfw.setCursorPos(handle, x, y)
+  }
   def swapBuffers(): Unit = glfw.swapBuffers(handle)
   def pollEvents(): Unit = glfw.pollEvents()
   def shouldClose(): Boolean = glfw.windowShouldClose(handle) != 0
+  def close(): Unit = glfw.setWindowShouldClose(handle,1)
+  def isKeyPressed(keyCode: Int): Boolean = {
+    glfw.getKey(handle, keyCode) == GlfwCostants.GLFW_PRESS
+  }
   //def destroy(): Unit = glfw.destroyWindow(handle)
 }

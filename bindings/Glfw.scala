@@ -5,48 +5,60 @@ import java.lang.invoke.MethodHandle
 
 class Glfw(lookup: SymbolLookup, linker: Linker) {
 
-  private final val glfwInit_H = linker.downcallHandle(lookup.find("glfwInit").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT))
-  private final val glfwCreateWindow_H = linker.downcallHandle(lookup.find("glfwCreateWindow").get(), FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
-  private final val glfwMakeContextCurrent_H = linker.downcallHandle(lookup.find("glfwMakeContextCurrent").get(), FunctionDescriptor.ofVoid(ValueLayout.ADDRESS))
-  private final val glfwSwapBuffers_H = linker.downcallHandle(lookup.find("glfwSwapBuffers").get(), FunctionDescriptor.ofVoid(ValueLayout.ADDRESS))
-  private final val glfwWindowShouldClose_H = linker.downcallHandle(lookup.find("glfwWindowShouldClose").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
+  private final val glfwInit_H = linker.downcallHandle(
+    lookup.find("glfwInit").get(), 
+    FunctionDescriptor.of(ValueLayout.JAVA_INT))
+  private final val glfwCreateWindow_H = linker.downcallHandle(
+    lookup.find("glfwCreateWindow").get(),
+    FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
+  private final val glfwMakeContextCurrent_H = linker.downcallHandle(
+    lookup.find("glfwMakeContextCurrent").get(), 
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS))
+  private final val glfwSwapBuffers_H = linker.downcallHandle(
+    lookup.find("glfwSwapBuffers").get(), 
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS))
+  private final val glfwWindowShouldClose_H = linker.downcallHandle(
+    lookup.find("glfwWindowShouldClose").get(), 
+    FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS))
   private final val glfwPollEvents_H = linker.downcallHandle(
     lookup.find("glfwPollEvents").get(), 
     FunctionDescriptor.ofVoid(),
     Linker.Option.critical(false))
-  private final val glfwTerminate_H = linker.downcallHandle(lookup.find("glfwTerminate").get(), FunctionDescriptor.ofVoid())
-  private final val glfwGetKey_H = linker.downcallHandle(lookup.find("glfwGetKey").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
-
+  private final val glfwTerminate_H = linker.downcallHandle(
+    lookup.find("glfwTerminate").get(), FunctionDescriptor.ofVoid())
+  private final val glfwGetKey_H = linker.downcallHandle(
+    lookup.find("glfwGetKey").get(), FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT))
   private final val glfwGetPrimaryMonitor_H = linker.downcallHandle(
-  lookup.find("glfwGetPrimaryMonitor").get(),
-  FunctionDescriptor.of(ValueLayout.ADDRESS)
-)
+    lookup.find("glfwGetPrimaryMonitor").get(),
+    FunctionDescriptor.of(ValueLayout.ADDRESS)
+  )
 
-  def getPrimaryMonitor(): MemorySegment =
-    glfwGetPrimaryMonitor_H.invokeExact().asInstanceOf[MemorySegment]
-
-  // Add these to your private downcall handles list
-  private final val glfwSetInputMode_H = linker.downcallHandle(lookup.find("glfwSetInputMode").get(), FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
-  private final val glfwGetCursorPos_H = linker.downcallHandle(lookup.find("glfwGetCursorPos").get(), FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
-
-  private final val glfwSetCursorPos_H = linker.downcallHandle(lookup.find("glfwSetCursorPos").get(), FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE))
+  private final val glfwSetInputMode_H = linker.downcallHandle(
+    lookup.find("glfwSetInputMode").get()
+  , FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))
+  private final val glfwGetCursorPos_H = linker.downcallHandle(
+    lookup.find("glfwGetCursorPos").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS))
+  private final val glfwSetCursorPos_H = linker.downcallHandle(
+    lookup.find("glfwSetCursorPos").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE))
   private final val glfwGetFramebufferSize_H = linker.downcallHandle(
-  lookup.find("glfwGetFramebufferSize").get(),
-  FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-)
+    lookup.find("glfwGetFramebufferSize").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+  )
   private final val glfwSetWindowShouldClose_H = linker.downcallHandle(
-  lookup.find("glfwSetWindowShouldClose").get(),
-  FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
-)
+    lookup.find("glfwSetWindowShouldClose").get(),
+    FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+  )
   private final val glfwCreateStandardCursor_H = linker.downcallHandle(
-  lookup.find("glfwCreateStandardCursor").get(),
-  FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
-)
+    lookup.find("glfwCreateStandardCursor").get(),
+    FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT)
+  )
 
   private final val glfwRawMouseMotionSupported_H = linker.downcallHandle(
-  lookup.find("glfwRawMouseMotionSupported").get(),
-  FunctionDescriptor.of(ValueLayout.JAVA_INT)
-)
+    lookup.find("glfwRawMouseMotionSupported").get(),
+    FunctionDescriptor.of(ValueLayout.JAVA_INT)
+  )
 
   private final val glfwSetCursorPosCallback_H = linker.downcallHandle(
     lookup.find("glfwSetCursorPosCallback").get(),
@@ -56,37 +68,31 @@ class Glfw(lookup: SymbolLookup, linker: Linker) {
     lookup.find("glfwSwapInterval").get(),
     FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT)
   )
-  
+
+  def getPrimaryMonitor(): MemorySegment =
+    glfwGetPrimaryMonitor_H.invokeExact().asInstanceOf[MemorySegment]
+
   def swapInterval(interval: Int): Unit = 
     glfwSwapIntervalHandle.invokeExact(interval)
- 
+
   def getWindowSize(window: MemorySegment,arena: Arena): (Int, Int) = {
     // Allocate native memory for output values
     val widthPtr = arena.allocate(ValueLayout.JAVA_INT)
     val heightPtr = arena.allocate(ValueLayout.JAVA_INT)
-
     glfwGetWindowSize_H.invoke(window, widthPtr, heightPtr)
-
     // Read values from native memory
     val width = widthPtr.get(ValueLayout.JAVA_INT, 0)
     val height = heightPtr.get(ValueLayout.JAVA_INT, 0)
-
-
     (width, height)
   }
-
   private final val glfwGetWindowSize_H = linker.downcallHandle(
-
     lookup.find("glfwGetWindowSize").get(),
     FunctionDescriptor.ofVoid(
       ValueLayout.ADDRESS,  // window
       ValueLayout.ADDRESS,  // width (output pointer)
-
       ValueLayout.ADDRESS   // height (output pointer)
     )
   )
-
-  // Add these to your Glfw class
   def getFramebufferSize(window: MemorySegment, arena: Arena): (Int, Int) = {
     val widthPtr = arena.allocate(ValueLayout.JAVA_INT)
     val heightPtr = arena.allocate(ValueLayout.JAVA_INT)

@@ -1,13 +1,11 @@
-object EngineProfiler {
-  // Toggle this at compile-time. When false, the compiler completely rips out 
-  // the tracking code from your render loop!
-  final val Enabled = true 
+import BuildConfig.ProfilerEnabled
 
+object EngineProfiler {
   private val metrics = java.util.concurrent.ConcurrentHashMap[String, Long]()
 
   // Inline means zero allocation and zero lambda-overhead per frame
   inline def zone[A](name: String)(inline block: => A): A = {
-    if (Enabled) {
+    inline if (ProfilerEnabled) {
       val start = System.nanoTime()
       val result = block
       val duration = System.nanoTime() - start
@@ -21,7 +19,7 @@ object EngineProfiler {
   }
 
   def printMetrics(): Unit = {
-    if (Enabled) {
+    if (ProfilerEnabled) {
       import scala.jdk.CollectionConverters._
       println("\n--- ENGINE PERFORMANCE METRICS ---")
       metrics.asScala.foreach { case (name, nano) =>

@@ -18,7 +18,7 @@ class ShaderProgram(private val gl: GL, val id: ProgramId)(using arena: Arena){
   private val uniformLocations = mutable.Map.empty[String, Int]
 
   // Pre-allocated matrix upload buffers
-  private val matrixBuffer: MemorySegment = arena.allocate(16 * 4)
+  private val matrixBuffer: MemorySegment = malloc(16 * 4)
   private val matrixArray: Array[Float]  = new Array[Float](16)
 
   def use(): Unit = gl.useProgram(id.toInt)
@@ -26,7 +26,7 @@ class ShaderProgram(private val gl: GL, val id: ProgramId)(using arena: Arena){
   def getUniformLocation(name: String): Int =
     uniformLocations.getOrElseUpdate(name, {
       withArena(ArenaType.Confined) { arena ?=>
-        val seg = arena.allocString(name)
+        val seg = allocString(name)
         gl.getUniformLocation(id.toInt, seg)
       }
     })
@@ -62,4 +62,9 @@ object ShaderProgram{
         MemorySegment.copy(p.matrixArray, 0, p.matrixBuffer, ValueLayout.JAVA_FLOAT, 0, 16)
         // 3. Upload to GPU – FIX: 0.toByte instead of false
         p.gl.uniformMatrix4fv(loc, 1, 0.toByte, p.matrixBuffer)
+
+  given Uniform[Int] with
+    extension (v: Int)
+      inline def set(p: ShaderProgram, loc: Int): Unit =
+        p.gl.uniform1i(loc, v)
 }

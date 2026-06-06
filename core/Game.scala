@@ -23,13 +23,16 @@ final class EngineState(
   val chunkRenderer: ChunkRenderer,
   val shader: ShaderProgram,
   val world: World,
+  val player: Player,
+  val atlasId: Int,
   // Cached Uniform Locations
   val locColor: Int,
   val locLightPos: Int,
   val locLightColor: Int,
   val locModel: Int,
   val locView: Int,
-  val locProjection: Int
+  val locProjection: Int,
+  val locTextureAtlas: Int
 )
 
 object Game {
@@ -49,7 +52,7 @@ object Game {
       while true do 
         frame 
   }
-  def start(width: Int, height: Int, title: String): Unit = {
+  def start[ProfilerEnabled <: Boolean](width: Int, height: Int, title: String): Unit = {
     import ShaderProgram.given
     val linker = Linker.nativeLinker()
     System.load("/usr/lib/x86_64-linux-gnu/libglfw.so.3") 
@@ -62,11 +65,12 @@ object Game {
     if (glfw.init() == 0) throw new RuntimeException("GLFW Init Failed")   
 
     withEngine(
-      setup = { (arena: Arena) ?=>
+      setup = { 
         val world = new World()
-        val camera = new Camera()
+        val player = new Player()
         val window = new GlfwWindow(width, height, glfw, title)
-        val inputHandler = new InputHandler(glfw, window, camera, 0.05)
+        val camera = new Camera(player.transform, player.forward, player.up)
+        val inputHandler = new InputHandler(window, player, 0.05)
         val chunkRenderer = new ChunkRenderer(gl)
 
         window.makeContextCurrent()
@@ -86,18 +90,27 @@ object Game {
         val bottomChunk = world.loadOrGenerateChunk(0, 0, 0)
         val middleChunk = world.loadOrGenerateChunk(1, 0, 0) 
         val topChunk    = world.loadOrGenerateChunk(2, 0, 0)  
+        val Chunk1    = world.loadOrGenerateChunk(1, 1, 0)  
+        val Chunk2    = world.loadOrGenerateChunk(1, 2, 0)  
+        val Chunk3    = world.loadOrGenerateChunk(1, 3, 0)  
+
         chunkRenderer.updateChunk(bottomChunk, world)
         chunkRenderer.updateChunk(middleChunk, world)
         chunkRenderer.updateChunk(topChunk, world)
+        chunkRenderer.updateChunk(Chunk1, world)
+        chunkRenderer.updateChunk(Chunk2, world)
+        chunkRenderer.updateChunk(Chunk3, world)
+        val atlasId = loadTextureAtlas(gl, "resources/textures/atlas.png")
 
         EngineState(
-          glfw, gl, window, camera, inputHandler, chunkRenderer, shader, world,
+          glfw, gl, window, camera, inputHandler, chunkRenderer, shader, world,player,atlasId,
           shader.getUniformLocation("u_ObjectColor"),
           shader.getUniformLocation("u_LightPos"),
           shader.getUniformLocation("u_LightColor"),
           shader.getUniformLocation("u_Model"),
           shader.getUniformLocation("u_View"),
-          shader.getUniformLocation("u_Projection")
+          shader.getUniformLocation("u_Projection"),
+          shader.getUniformLocation("u_TextureAtlas")
         )
       },
       runLoop = (arena, state) => {
@@ -106,6 +119,14 @@ object Game {
         val viewMatrix       = new Matrix4f()
         val projectionMatrix = new Matrix4f()
         val winHandle = state.window.handle 
+        state.shader.use()
+        state.shader.set(state.locLightPos,   (5.0f, 100.0f, 5.0f))  
+        state.shader.set(state.locLightColor, (1.0f, 1.0f, 0.95f))  
+        state.shader.set(state.locModel,      modelMatrix)            
+        state.gl.activeTexture(GL_TEXTURE0)
+        state.gl.bindTexture(GL_TEXTURE_2D, state.atlasId)
+        state.shader.set(state.locTextureAtlas, 0)
+
         engineLoop {
           state.glfw.pollEvents()
           if state.window.shouldClose() then break()
@@ -119,15 +140,10 @@ object Game {
               state.gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
             EngineProfiler.zone("Math & Uniform Updates"):
-              state.shader.use()
               state.camera.getViewMatrix(viewMatrix)
               state.camera.getProjectionMatrix(projectionMatrix, state.window.currentAspectRatio)
+              state.player.updateDirection() // Update vectors based on state changes
               modelMatrix.identity() 
-
-              state.shader.set(state.locColor,      (0.2f, 0.8f, 0.2f))  
-              state.shader.set(state.locLightPos,   (5.0f, 100.0f, 5.0f))  
-              state.shader.set(state.locLightColor, (1.0f, 1.0f, 0.95f))  
-              state.shader.set(state.locModel,      modelMatrix)            
               state.shader.set(state.locView,       viewMatrix)               
               state.shader.set(state.locProjection, projectionMatrix)
 

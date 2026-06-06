@@ -43,12 +43,10 @@ class World:
     do
       val worldX = chunk.cx * CHUNK_SIZE + x
       val worldZ = chunk.cz * CHUNK_SIZE + z
-     // val height = (Noise.perlin(worldX * 0.01, worldZ * 0.01) * 10 + 20).toInt
-      chunk.setBlock(x,y,z, Block.Dirt)
-
-    /*  for y <- 0 until height.min(CHUNK_SIZE) do
-        val block = y match
-          case h if h == height - 1 => Block.Grass
-          case h if h > height - 5 => Block.Dirt
-          case _ => Block.Stone
-        chunk.setBlock(x, y, z, block)*/
+      val height = (Noise.perlin(worldX * 0.01, worldZ * 0.01) * 10 + 20).toInt
+      for y <- 0 until height.min(CHUNK_SIZE) do
+          val block = y match
+            case h if h == height - 1 => Block.Grass
+            case h if h > height - 5 => Block.Dirt
+            case _ => Block.Stone
+          chunk.setBlock(x, y, z, block)

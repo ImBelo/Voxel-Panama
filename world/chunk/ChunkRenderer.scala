@@ -10,7 +10,7 @@ class ChunkRenderer(gl: GL)(using arena: Arena):
     
     chunkMeshes.get((chunk.cx, chunk.cy, chunk.cz)).foreach { oldGpuMesh =>
       oldGpuMesh.cleanup() 
-    }
+   }
     
     val gpuMesh = new GpuMesh(gl)
     gpuMesh.build(mesh.vertices, mesh.indices)
